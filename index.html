@@ -1504,7 +1504,7 @@
   정적 파일 + <span class="cmd">/api/chat</span> 라우트)
 
 <span class="kw">[지식 베이스]</span>
-- <span class="cmd">docs/</span> 폴더의 모든 .md 문서를 읽어서
+- <span class="cmd">uploads/</span> 폴더의 모든 .md 문서를 읽어서
   시스템 프롬프트에 전체 주입
 - 벡터 DB 불필요 (문서가 작으므로)
 
@@ -1515,7 +1515,7 @@
 
 <span class="kw">[배포 — Vercel 최적화]</span>
 - 추후 <span class="cmd">GitHub → Vercel</span> 배포를 전제로 구성
-- <span class="cmd">/api/chat</span>은 Vercel 서버리스 함수로 동작 (로컬은 server.js)
+- <span class="cmd">/api/chat</span>은 Vercel 서버리스 함수로 동작 (로컬은 server.js, 정적 파일은 public/ 디렉터리에 두기. Vercel 정적 호스팅 + /api 함수 공존 표준 구조)
 - 환경변수는 Vercel 대시보드에서 주입, 키 커밋 금지
 - <span class="cmd">.gitignore</span>에 <span class="cmd">.env</span> · <span class="cmd">node_modules</span> 포함</div>
       <div class="code" style="font-size:12px;line-height:1.62"><span class="kw">[답변 규칙 — 질문 유형별로 다르게]</span>
