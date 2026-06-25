@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Cowork 완전 가이드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F0E8;
+    --paper2:#EFEAE0;
+    --ink:#16202D;
+    --ink2:#222C38;
+    --body:#454F5B;
+    --muted:#8A8175;
+    --line:rgba(22,32,45,0.055);
+    --line2:rgba(22,32,45,0.11);
+    --bracket:#1E2833;
+    --clay:#BF5B3D;
+    --clay-soft:#C9624A;
+    --clay-tint:rgba(191,91,61,0.09);
+    --clay-line:rgba(191,91,61,0.30);
+    --card:#FBF8F2;
+    --code-bg:#ECE6DA;
+    --ok:#3F7A52;
+    --warn:#B25B3C;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--paper);
+    font-family:'Pretendard',-apple-system,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+
+  #deck{width:100vw;height:100vh;position:relative}
+
+  /* ── grid + slide ── */
+  .slide{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    padding:40px 78px 94px;
+    opacity:0;pointer-events:none;transform:translateX(40px);
+    transition:opacity .42s ease,transform .42s ease;overflow-y:auto;
+    background-color:var(--paper);
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:46px 46px;background-position:center top;
+  }
+  .slide.active{opacity:1;pointer-events:all;transform:translateX(0)}
+  .slide.exit{opacity:0;transform:translateX(-40px)}
+  .slide.center{justify-content:center}
+
+  /* scrollbar */
+  .slide::-webkit-scrollbar{width:8px}
+  .slide::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px}
+
+  /* ── header ── */
+  .head{text-align:center;flex-shrink:0;margin-bottom:30px;width:100%}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;
+    font-size:15px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--clay);margin-bottom:14px}
+  .eyebrow::before{content:"";width:8px;height:8px;background:var(--clay);
+    transform:rotate(45deg);display:inline-block}
+  .eyebrow.plain{color:var(--muted)}
+  .eyebrow.plain::before{background:var(--muted)}
+  .s-title{font-size:clamp(33px,4.5vw,54px);font-weight:800;letter-spacing:-.02em;
+    line-height:1.12;color:var(--ink)}
+  .s-title .clay{color:var(--clay)}
+  .s-title small{font-size:.56em;font-weight:500;color:var(--muted);letter-spacing:0}
+  .s-sub{margin-top:20px;font-size:clamp(17px,1.85vw,22px);color:var(--body);
+    line-height:1.7;font-weight:400}
+
+  .body{width:100%;max-width:1260px;margin:0 auto}
+
+  /* ── bracket frame ── */
+  .frame{position:relative}
+  .brk{position:absolute;width:20px;height:20px;border:2px solid var(--bracket);pointer-events:none}
+  .brk.tl{top:-2px;left:-2px;border-right:0;border-bottom:0}
+  .brk.tr{top:-2px;right:-2px;border-left:0;border-bottom:0}
+  .brk.bl{bottom:-2px;left:-2px;border-right:0;border-top:0}
+  .brk.br{bottom:-2px;right:-2px;border-left:0;border-top:0}
+  .frame.clay .brk{border-color:var(--clay)}
+
+  /* ── feature (icon + label) ── */
+  .feat{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;gap:16px;padding:34px 24px}
+  .feat .ic{width:56px;height:56px;color:var(--ink2)}
+  .feat .ic svg{width:100%;height:100%}
+  .feat .lbl{font-size:clamp(18px,1.9vw,23px);font-weight:700;color:var(--ink)}
+  .feat .desc{font-size:15.5px;color:var(--body);line-height:1.6;font-weight:400;max-width:310px}
+
+  /* ── generic grid ── */
+  .grid{display:grid;gap:36px 44px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr 1fr}
+  .g4{grid-template-columns:1fr 1fr 1fr 1fr}
+
+  /* ── card / panel ── */
+  .panel{position:relative;padding:26px 30px}
+  .panel .ttl{font-size:19px;font-weight:800;color:var(--ink);margin-bottom:11px;
+    display:flex;align-items:center;gap:9px}
+  .panel .ttl .ic{width:20px;height:20px;color:var(--clay);flex-shrink:0}
+  .panel .ic svg{width:100%;height:100%}
+  .panel p,.panel li{font-size:16px;color:var(--body);line-height:1.72}
+  .panel strong{color:var(--ink);font-weight:700}
+  .lead{font-size:19px;line-height:1.78;color:var(--body)}
+  .lead strong{color:var(--ink)}
+
+  .kbadge{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.06em;
+    color:var(--clay);background:var(--clay-tint);border:1px solid var(--clay-line);
+    border-radius:5px;padding:3px 9px;text-transform:uppercase}
+
+  /* ── note / warn ── */
+  .note{position:relative;padding:17px 22px;font-size:16px;line-height:1.7;
+    color:var(--body);background:var(--card);border-left:3px solid var(--clay)}
+  .note strong{color:var(--ink)}
+  .warn{position:relative;padding:17px 22px;font-size:16px;line-height:1.7;
+    color:var(--body);background:var(--clay-tint);border:1px solid var(--clay-line);border-radius:8px}
+  .warn strong{color:var(--warn)}
+
+  /* ── diagram pyramid ── */
+  .pyr{display:flex;flex-direction:column;align-items:center;gap:9px}
+  .pyr .row{position:relative;padding:16px 20px;text-align:center;
+    border:1.5px solid var(--ink2);background:var(--card);border-radius:8px;
+    font-size:17px;font-weight:700;color:var(--ink)}
+  .pyr .row span{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:3px}
+  .pyr .row.clay{border-color:var(--clay);color:var(--clay)}
+  .pyr .row.fill{background:var(--ink);color:#F4F0E8;border-color:var(--ink)}
+  .pyr .arr{color:var(--muted);font-size:15.5px;line-height:1}
+
+  /* ── flow steps ── */
+  .flow{display:flex;flex-direction:column;gap:12px}
+  .flow .item{display:flex;gap:13px;align-items:flex-start}
+  .flow .n{flex-shrink:0;width:34px;height:34px;border-radius:50%;
+    background:var(--ink);color:var(--paper);font-size:15.5px;font-weight:800;
+    display:flex;align-items:center;justify-content:center}
+  .flow .n.clay{background:var(--clay)}
+  .flow .n.ol{background:transparent;border:1.5px solid var(--ink2);color:var(--ink)}
+  .flow .tx{font-size:16px;line-height:1.6;color:var(--body);padding-top:3px}
+  .flow .tx strong{color:var(--ink)}
+  .flow .tx span{display:block;font-size:14.5px;color:var(--muted);margin-top:2px}
+
+  /* ── bullet list ── */
+  .blist{list-style:none;display:flex;flex-direction:column;gap:13px}
+  .blist li{display:flex;gap:14px;align-items:flex-start;font-size:16px;color:var(--body);line-height:1.55}
+  .blist li .bic{flex-shrink:0;width:28px;height:28px;color:var(--ink2);margin-top:1px}
+  .blist li .bic svg{width:100%;height:100%}
+  .blist li strong{color:var(--ink)}
+  .clabel{font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .clabel.clay{color:var(--clay)}
+
+  /* ── code ── */
+  .code{background:var(--code-bg);border:1px solid var(--line2);border-radius:9px;
+    padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:14.5px;
+    line-height:1.85;color:var(--ink2);white-space:pre;overflow-x:auto}
+  .code .cm{color:var(--muted)}
+  .code .kw{color:var(--clay);font-weight:600}
+  .code .st{color:var(--ok)}
+  .code .cmd{color:var(--ink);font-weight:700}
+
+  /* ── table ── */
+  table.tbl{width:100%;border-collapse:collapse;font-size:15.5px}
+  table.tbl th,table.tbl td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--line2);
+    color:var(--body);vertical-align:top}
+  table.tbl th{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--muted);border-bottom:1.5px solid var(--ink2)}
+  table.tbl td strong{color:var(--ink)}
+  table.tbl tr:last-child td{border-bottom:0}
+
+  /* mini connect cells */
+  .mini{display:flex;flex-direction:column;align-items:center;gap:9px;padding:17px 10px;
+    border:1px solid var(--line2);border-radius:9px;background:var(--card)}
+  .mini .ic{width:30px;height:30px;color:var(--ink2)}
+  .mini .ic svg{width:100%;height:100%}
+  .mini .t{font-size:12.5px;color:var(--muted);font-weight:600;text-align:center}
+
+  /* command card */
+  .cmd-card{position:relative;padding:18px 20px}
+  .cmd-card .top{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+  .cmd-card .tok{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:17px;
+    color:var(--clay);background:var(--clay-tint);border:1px solid var(--clay-line);
+    border-radius:7px;padding:5px 12px}
+  .cmd-card .cap{font-size:14px;color:var(--muted);font-weight:600}
+  .cmd-card .d{font-size:15px;color:var(--body);line-height:1.7}
+  .cmd-card .d code{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--clay);
+    background:var(--clay-tint);padding:1px 5px;border-radius:4px}
+  .cmd-card .d strong{color:var(--ink)}
+
+  /* cover stats */
+  .stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+  .stat{position:relative;padding:18px 26px;min-width:138px;text-align:center}
+  .stat .v{font-size:25px;font-weight:800;color:var(--ink)}
+  .stat .k{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.04em;margin-top:3px}
+
+  /* toc */
+  .toc{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}
+  .toc .it{position:relative;padding:19px 18px;background:var(--card)}
+  .toc .it.on{background:#fff}
+  .toc .num{font-size:13px;font-weight:800;letter-spacing:.08em;color:var(--muted)}
+  .toc .it.on .num{color:var(--clay)}
+  .toc .lab{font-size:17.5px;font-weight:800;color:var(--ink);margin:5px 0 4px}
+  .toc .sub{font-size:13px;color:var(--muted);line-height:1.5}
+
+  /* ── nav ── */
+  #progress{position:fixed;top:0;left:0;height:3px;background:var(--clay);
+    transition:width .4s ease;z-index:120}
+  #nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:14px;background:rgba(251,248,242,0.9);
+    backdrop-filter:blur(10px);border:1px solid var(--line2);border-radius:40px;
+    padding:8px 18px;z-index:120}
+  .nb{width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);
+    background:#fff;color:var(--ink2);cursor:pointer;display:flex;align-items:center;
+    justify-content:center;transition:all .18s;font-size:18px}
+  .nb:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  #ctr{display:flex;align-items:center;gap:3px;color:var(--muted);font-size:15.5px;
+    font-variant-numeric:tabular-nums}
+  #pin{width:30px;background:transparent;border:none;border-bottom:1px solid var(--line2);
+    color:var(--ink);font-size:15.5px;text-align:center;outline:none;font-family:inherit;
+    -moz-appearance:textfield}
+  #pin::-webkit-outer-spin-button,#pin::-webkit-inner-spin-button{-webkit-appearance:none}
+  #pin:focus{border-bottom-color:var(--clay);color:var(--clay)}
+  .dots{display:flex;gap:5px;align-items:center;max-width:340px;flex-wrap:wrap}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--line2);cursor:pointer;transition:all .2s}
+  .dot.active{background:var(--clay);width:20px;border-radius:4px}
+
+  /* horizontal pipeline */
+  .pipe{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .pipe .step{position:relative;flex:1;min-width:130px;padding:18px 14px;text-align:center}
+  .pipe .step .si{width:34px;height:34px;margin:0 auto 8px;color:var(--ink2)}
+  .pipe .step .si svg{width:100%;height:100%}
+  .pipe .step .st{font-size:15.5px;font-weight:700;color:var(--ink)}
+  .pipe .step .sd{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.45}
+  .pipe .sep{display:flex;align-items:center;color:var(--clay);font-size:19px;padding:0 2px}
+
+  /* tag row */
+  .tagrow{display:flex;gap:8px;flex-wrap:wrap}
+  .tag{font-size:14px;font-weight:700;color:var(--ink2);background:var(--card);
+    border:1px solid var(--line2);border-radius:20px;padding:5px 13px}
+  .tag.clay{color:var(--clay);background:var(--clay-tint);border-color:var(--clay-line)}
+
+  /* big number */
+  .bignum{display:flex;align-items:baseline;gap:8px}
+  .bignum .n{font-size:41px;font-weight:800;color:var(--clay);line-height:1;font-variant-numeric:tabular-nums}
+  .bignum .u{font-size:15.5px;color:var(--muted);font-weight:600}
+
+  /* permission legend */
+  .perm{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line2)}
+  .perm:last-child{border-bottom:0}
+  .perm .pd{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+  .perm .pn{font-size:16.5px;font-weight:700;color:var(--ink);min-width:112px}
+  .perm .px{font-size:15px;color:var(--body);line-height:1.5}
+
+  /* dense-slide fit tweaks */
+  #p1-caps .feat .ic,#p7-mistakes .feat .ic,#p5-rot .feat .ic{width:48px;height:48px}
+  #p1-caps .feat,#p7-mistakes .feat,#p5-rot .feat{padding:26px 20px}
+  #p1-caps .body.g3{gap:8px 36px}
+  #p7-mistakes .body.g3{gap:6px 30px}
+  #p5-rot .body.g2{gap:14px 34px}
+  #ai-3stage .feat .ic{width:44px;height:44px}
+  #ai-3stage .feat{padding:18px 18px}
+  #ai-3stage .body.g3,#ai-3stage .grid.g3{gap:14px 40px}
+  #ai-3stage .frame.clay.panel{margin-bottom:12px!important;padding:16px 24px!important}
+  #ai-3stage .note{margin-top:12px!important}
+  #ai-3stage .head{margin-bottom:14px}
+  #claude-whatis .note{margin-top:14px!important}
+  #claude-whatis .head{margin-bottom:20px}
+  #p5-levers .flow{gap:6px}
+  #p5-levers .flow .tx{line-height:1.4}
+  #p5-levers .flow .tx span{margin-top:1px}
+  #p5-levers .head{margin-bottom:18px}
+  #p5-levers .flow .n{width:31px;height:31px}
+
+  @media(max-width:760px){
+    .slide{padding:30px 22px 80px}
+    .g3,.g4,.toc{grid-template-columns:1fr 1fr}
+    .grid.g2{grid-template-columns:1fr}
+    .pipe .step{min-width:45%}
+  }
+  /* ── chapter sidebar ── */
+  #menu-btn{position:fixed;top:15px;left:15px;z-index:140;display:flex;align-items:center;gap:9px;
+    background:rgba(251,248,242,.92);backdrop-filter:blur(8px);border:1px solid var(--line2);
+    border-radius:30px;padding:9px 17px 9px 14px;cursor:pointer;font-family:inherit;
+    font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.01em;transition:all .18s}
+  #menu-btn:hover{background:#fff;border-color:var(--clay-line);color:var(--clay)}
+  #menu-btn .bars{display:flex;flex-direction:column;gap:3px}
+  #menu-btn .bars i{display:block;width:15px;height:2px;background:currentColor;border-radius:2px}
+  #sb-overlay{position:fixed;inset:0;background:rgba(22,32,45,.20);z-index:141;opacity:0;
+    pointer-events:none;transition:opacity .3s}
+  #sb-overlay.open{opacity:1;pointer-events:all}
+  #sidebar{position:fixed;top:0;left:0;height:100vh;width:308px;z-index:142;background:#FBF8F2;
+    border-right:1px solid var(--line2);transform:translateX(-100%);
+    transition:transform .32s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;
+    box-shadow:2px 0 34px rgba(22,32,45,.07)}
+  #sidebar.open{transform:translateX(0)}
+  #sb-head{padding:22px 22px 15px;border-bottom:1px solid var(--line2);
+    display:flex;align-items:center;justify-content:space-between}
+  #sb-head .t{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+  #sb-head .t span{color:var(--clay)}
+  #sb-close{border:none;background:transparent;color:var(--muted);font-size:22px;cursor:pointer;
+    line-height:1;padding:2px 4px}
+  #sb-close:hover{color:var(--ink)}
+  #sb-list{flex:1;overflow-y:auto;padding:12px 12px 20px}
+  #sb-list::-webkit-scrollbar{width:7px}
+  #sb-list::-webkit-scrollbar-thumb{background:var(--line2);border-radius:7px}
+  .sb-sec{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);padding:12px 12px 6px}
+  .sb-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;
+    cursor:pointer;transition:background .15s;position:relative}
+  .sb-item:hover{background:var(--paper2)}
+  .sb-item.active{background:var(--clay-tint)}
+  .sb-item.active::before{content:"";position:absolute;left:1px;top:8px;bottom:8px;width:3px;
+    background:var(--clay);border-radius:3px}
+  .sb-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--muted);
+    min-width:50px;letter-spacing:-.02em}
+  .sb-item.active .sb-num{color:var(--clay)}
+  .sb-title{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.25}
+  .sb-foot{padding:13px 22px;border-top:1px solid var(--line2);font-size:11px;color:var(--muted);
+    display:flex;align-items:center;gap:6px}
+  .sb-foot kbd{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--paper2);
+    border:1px solid var(--line2);border-radius:4px;padding:1px 5px;color:var(--ink2)}
+  @media(max-width:760px){#sidebar{width:84vw}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div id="deck">
+<!-- slides injected below -->
+
+<!-- COVER -->
+<div class="slide center" id="s-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">실무 완전 가이드 · 2026</div>
+    <h1 class="s-title" style="font-size:clamp(44px,6.6vw,82px)">Claude <span class="clay">Cowork</span><br>완전 가이드</h1>
+    <p class="s-sub" style="max-width:600px;margin:18px auto 0">채팅을 넘어 <strong style="color:var(--ink)">일을 위임</strong>하는 AI 에이전트<br>개념 · 셋업 · 커넥터 · 스킬 · 컨텍스트 엔지니어링 · Claude Code 준비 · 실전 프로젝트</p>
+  </div>
+  <div class="stats">
+    <div class="frame stat"><div class="v">11</div><div class="k">파트</div></div>
+    <div class="frame stat"><div class="v">64</div><div class="k">슬라이드</div></div>
+    <div class="frame stat"><div class="v">Cowork+Code</div><div class="k">통합 과정</div></div>
+    <div class="frame stat"><div class="v">Windows</div><div class="k">환경 기준</div></div>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="slide" id="s-toc">
+  <div class="head"><div class="eyebrow plain">목차</div><h2 class="s-title">오늘 배울 내용</h2></div>
+        <div class="body">
+    <div class="toc" style="grid-template-columns:repeat(4,1fr);gap:12px">
+      <div class="frame it on"><div class="num">PART 1</div><div class="lab">AI 기초 개념</div><div class="sub">구조 · 엔진/완성차 · 3단계 · Agent · 할루시네이션</div></div>
+      <div class="frame it on"><div class="num">PART 2</div><div class="lab">Claude &amp; Cowork</div><div class="sub">정체 · 위임 · 6대 역량 · 에이전트 루프</div></div>
+      <div class="frame it"><div class="num">PART 3</div><div class="lab">셋업 &amp; 인터페이스</div><div class="sub">요금제 · 설치 · 태스크 · 폴더</div></div>
+      <div class="frame it"><div class="num">PART 4</div><div class="lab">컨텍스트 엔지니어링</div><div class="sub">토큰 · 윈도우 · 5가지 레버</div></div>
+      <div class="frame it"><div class="num">PART 5</div><div class="lab">고급 기능</div><div class="sub">플러그인 · 라이브 아티팩트</div></div>
+      <div class="frame it"><div class="num">PART 6</div><div class="lab">커넥터</div><div class="sub">권한 · 커스텀 MCP</div></div>
+      <div class="frame it"><div class="num">PART 7</div><div class="lab">스킬 (Skills)</div><div class="sub">3계층 · 제작 · 공유</div></div>
+      <div class="frame it" style="background:#fff"><div class="num" style="color:var(--clay)">PART 8</div><div class="lab">컴퓨터 기초 용어</div><div class="sub">GUI/CLI · IDE · 로컬/클라우드</div></div>
+      <div class="frame it" style="background:#fff"><div class="num" style="color:var(--clay)">PART 9</div><div class="lab">웹 개발 기초</div><div class="sub">프론트/백엔드 · HTML/CSS/JS</div></div>
+      <div class="frame it" style="background:#fff"><div class="num" style="color:var(--clay)">PART 10</div><div class="lab">Git &amp; GitHub</div><div class="sub">버전 관리 · 저장소 · 배포</div></div>
+      <div class="frame it" style="background:var(--clay-tint)"><div class="num" style="color:var(--clay)">PART 11</div><div class="lab">실전 프로젝트</div><div class="sub">랜딩페이지 + RAG 챗봇 배포</div></div>
+    </div>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:14px">PART 8~10은 <strong style="color:var(--clay)">Claude Code 사전 지식</strong> · PART 11은 <strong style="color:var(--clay)">종합 실습 프로젝트</strong>입니다</p>
+  </div>
+</div>
+
+<!-- PART 2 COVER -->
+<!-- ===== PART 1 : AI 기초 (원본 자료 통합) ===== -->
+<div class="slide center" id="ai-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">PART 1</div>
+    <h1 class="s-title" style="font-size:clamp(38px,5.4vw,66px)"><span class="clay">AI</span> 기초 개념</h1>
+    <p class="s-sub" style="max-width:540px;margin:18px auto 0">전체 구조를 이해해야 흔들리지 않습니다<br>AI · 생성형 AI · LLM · 프롬프트 · Agent · 할루시네이션</p>
+  </div>
+</div>
+
+<!-- 4. AI 전체 구조 -->
+
+<div class="slide" id="ai-structure">
+  <div class="head">
+    <div class="eyebrow">PART 1 — AI 기초</div>
+    <h2 class="s-title">AI의 전체 구조</h2>
+  </div>
+  <div class="body grid g2" style="align-items:center">
+    <div class="pyr">
+      <div class="frame row" style="width:100%"><div data-ic="cpu" style="display:none"></div>인공지능 (AI)<span>이미지생성 · 음성인식 · 추천 · 자율주행…</span></div>
+      <div class="arr">▼</div>
+      <div class="frame row" style="width:86%">생성형 AI<span>글 · 이미지 · 영상 · 코드를 직접 생성</span></div>
+      <div class="arr">▼</div>
+      <div class="frame row clay" style="width:72%">LLM (대규모 언어 모델)<span style="color:var(--clay);opacity:.7">언어 이해 · 생성에 특화</span></div>
+      <div class="arr">▼</div>
+      <div class="frame row fill" style="width:58%">Claude · GPT · Gemini</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="frame panel"><div class="ttl"><span class="ic" data-ic="cpu"></span>인공지능 (AI)</div><p>컴퓨터가 인간처럼 학습·판단·문제해결하도록 만드는 기술 전체</p></div>
+      <div class="frame panel"><div class="ttl"><span class="ic" data-ic="sparkle"></span>생성형 AI</div><p>데이터를 '분류'하는 것을 넘어 새로운 콘텐츠를 <strong>직접 만들어내는</strong> AI</p></div>
+      <div class="frame clay panel"><div class="ttl"><span class="ic" data-ic="book"></span>LLM — Large Language Model</div><p>방대한 텍스트를 학습해 사람처럼 문장을 이해·생성. <strong>Claude는 LLM</strong>입니다.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. 엔진 vs 완성차 -->
+
+<div class="slide" id="ai-engine">
+  <div class="head">
+    <div class="eyebrow">PART 1 — AI 기초</div>
+    <h2 class="s-title">LLM은 <span class="clay">엔진</span>, 서비스는 <span class="clay">완성차</span></h2>
+  </div>
+  <div class="body grid g2">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="gear" style="width:16px;height:16px"></span>LLM (엔진)</div>
+      <div class="frame clay panel" style="margin-bottom:14px"><div class="ttl" style="color:var(--clay)">Claude (Anthropic)</div><p>GPT (OpenAI) · Gemini (Google)<br>핵심 언어 처리 엔진</p></div>
+      <div class="note">엔진은 자동차에만 쓰이지 않습니다. 비행기·열차 등 다양한 곳에 활용되듯, LLM도 외부 서비스에서 다양하게 활용됩니다.</div>
+    </div>
+    <div>
+      <div class="clabel"><span class="ic" data-ic="globe" style="width:16px;height:16px"></span>서비스 (완성차)</div>
+      <div class="frame panel" style="margin-bottom:14px"><div class="ttl">Claude.ai · ChatGPT</div><p>일반인이 바로 탑승 가능한 대화형 AI 서비스. LLM을 감싼 인터페이스</p></div>
+      <div class="warn"><strong>핵심:</strong> Claude는 엔진(LLM)이자 서비스 브랜드이자 모델 이름입니다. 맥락에 따라 의미가 달라집니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 6. 3단계 엔지니어링 -->
+
+<div class="slide" id="ai-3stage">
+  <div class="head">
+    <div class="eyebrow">PART 1 — AI 기초</div>
+    <h2 class="s-title">AI를 다루는 <span class="clay">3단계</span> 엔지니어링</h2>
+  </div>
+  <div class="body">
+    <div class="frame clay panel" style="margin-bottom:18px;text-align:center">
+      <div style="font-size:21.5px;font-weight:800;margin-bottom:7px">
+        <span class="clay">프롬프트</span> → <span style="color:var(--ink)">콘텍스트</span> → <span style="color:var(--ink)">하네스</span> 엔지니어링</div>
+      <p class="lead" style="font-size:17px">초점이 <strong>'무엇을 말하나' → '무엇을 보여주나' → '어떻게 실행하나'</strong>로 확장됩니다. 뒤 단계가 앞 단계를 대체하는 게 아니라 <strong>바깥에서 감싸는 구조</strong>입니다.</p>
+    </div>
+    <div class="grid g3">
+      <div class="frame feat"><div class="ic" data-ic="pen"></div><div class="lbl">① 프롬프트 엔지니어링</div><div class="desc"><strong>"무엇을 말하나"</strong><br>지시·역할·형식·예시 설계<br><span style="color:var(--muted)">메시지 단위 · 2022~2024</span></div></div>
+      <div class="frame feat"><div class="ic" data-ic="book"></div><div class="lbl">② 콘텍스트 엔지니어링</div><div class="desc"><strong>"무엇을 보여주나"</strong><br>컨텍스트 창에 담을 정보 설계<br><span style="color:var(--muted)">세션 단위 · 2025</span></div></div>
+      <div class="frame feat"><div class="ic" data-ic="gear"></div><div class="lbl">③ 하네스 엔지니어링</div><div class="desc"><strong>"어떻게 실행하나"</strong><br>모델을 감싼 실행 시스템 설계<br><span style="color:var(--muted)">시스템 단위 · 2026~</span></div></div>
+    </div>
+    <div class="note" style="margin-top:18px"><strong>한 줄 요약:</strong> 프롬프트 = <strong>지시</strong>, 콘텍스트 = <strong>지식</strong>, 하네스 = <strong>실행 체계</strong>. 셋은 경쟁이 아니라 겹겹이 쌓이는 층입니다. <strong>콘텍스트·하네스 엔지니어링은 PART 4 컨텍스트 엔지니어링</strong>에서 자세히 다룹니다.</div>
+  </div>
+</div>
+
+<!-- 7. 프롬프트 엔지니어링 -->
+
+<div class="slide" id="ai-agent">
+  <div class="head">
+    <div class="eyebrow">PART 1 — AI 기초</div>
+    <h2 class="s-title">AI Agent <small>— 스스로 계획하고 실행하는 AI</small></h2>
+  </div>
+  <div class="body grid g2">
+    <div>
+      <div class="clabel"><span class="ic" data-ic="chat" style="width:15px;height:15px"></span>기존 AI 챗봇</div>
+      <div class="pyr" style="align-items:stretch">
+        <div class="frame row">사람이 질문</div>
+        <div class="arr">▼</div>
+        <div class="frame row">AI가 답변</div>
+        <div class="arr" style="color:var(--warn)">✕ 끝</div>
+      </div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="robot" style="width:15px;height:15px"></span>AI Agent</div>
+      <div class="pyr" style="align-items:stretch">
+        <div class="frame row">목표만 제시</div>
+        <div class="arr">▼</div>
+        <div class="frame row fill">AI Agent<span style="color:#D9CFC0">계획 → 툴 활용 → 실행 → 검토 → 완료</span></div>
+        <div class="arr" style="color:var(--ok)">✓ 결과물 완성</div>
+      </div>
+    </div>
+  </div>
+  <div class="body note" style="margin-top:18px"><strong>예시:</strong> "이번 달 팀 성과를 구글 시트에서 분석해 보고서 만들고 팀 메일로 발송해줘" → AI Agent가 시트 조회 → 분석 → 보고서 작성 → 메일 발송까지 수행합니다. <strong>Claude Cowork가 바로 이런 에이전트</strong>입니다(PART 2~).</div>
+</div>
+
+<!-- 11. 할루시네이션 -->
+
+<div class="slide" id="ai-halluc">
+  <div class="head">
+    <div class="eyebrow">PART 1 — AI 기초</div>
+    <h2 class="s-title">할루시네이션 <small>(Hallucination)</small></h2>
+  </div>
+  <div class="body">
+    <div class="warn" style="margin-bottom:20px;text-align:center"><strong style="font-size:18px">AI가 없는 사실을 있는 것처럼 말하는 현상</strong><br>존재하지 않는 논문 인용 · 없는 법률 설명 · 가상의 통계 수치 제시</div>
+    <div class="grid g2">
+      <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="alert"></div><div class="lbl">왜 이런 일이 생길까?</div><div class="desc" style="max-width:none">AI는 "정답을 아는 것"이 아니라 <strong style="color:var(--ink)">"그럴듯한 다음 단어를 예측"</strong>하는 방식으로 작동하기 때문입니다.</div></div>
+      <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="check"></div><div class="lbl">대응 방법</div><div class="desc" style="max-width:none">중요한 정보는 <strong style="color:var(--ink)">반드시 검증</strong>하세요. 특히 수치·법률·학술 정보는 원본 출처를 확인하는 습관이 필요합니다.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 12. PART 2 COVER -->
+
+<div class="slide center" id="p1-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">PART 2</div>
+    <h1 class="s-title" style="font-size:clamp(38px,5.4vw,66px)">Claude &amp; Cowork</h1>
+    <p class="s-sub" style="max-width:520px;margin:18px auto 0">챗봇이 아닌 <span class="clay">AI 에이전트</span><br>대화하는 도구에서 일을 위임하는 동료로</p>
+  </div>
+</div>
+
+<!-- 챗봇 vs 에이전트 -->
+<div class="slide" id="claude-whatis">
+  <div class="head"><div class="eyebrow">PART 2 — Claude &amp; Cowork</div><h2 class="s-title">Claude &amp; Anthropic이란?</h2></div>
+  <div class="body">
+    <div class="frame clay panel" style="margin-bottom:18px;text-align:center"><p class="lead" style="font-size:17px"><strong>Anthropic</strong>이 개발한 <strong>LLM 기반 생성형 AI</strong> — 하나의 이름이 <strong>서비스이자 브랜드이자 모델 이름</strong>으로 쓰입니다.</p></div>
+    <div class="grid g3">
+      <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="shield"></div><div class="lbl">Anthropic (회사)</div><div class="desc" style="max-width:none">전 OpenAI 연구원들이 <strong style="color:var(--ink)">2021년 창립</strong>한 <strong style="color:var(--ink)">AI 안전(safety)</strong> 중심의 연구·제품 회사</div></div>
+      <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="cpu"></div><div class="lbl">세 가지 의미</div><div class="desc" style="max-width:none"><strong style="color:var(--ink)">엔진</strong>(LLM) · <strong style="color:var(--ink)">서비스</strong>(Claude.ai) · <strong style="color:var(--ink)">모델 이름</strong>(Opus·Sonnet·Haiku) — 맥락에 따라 의미가 달라집니다</div></div>
+      <div class="frame clay feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="layers"></div><div class="lbl">같은 엔진, 다른 환경</div><div class="desc" style="max-width:none">웹 · Cowork · Code 세 가지로 쓰입니다 — <strong style="color:var(--ink)">언제 무엇을 쓰는지는 다음 장에서 →</strong></div></div>
+    </div>
+    <div class="note" style="margin-top:18px"><strong>핵심:</strong> "Claude"는 회사(Anthropic)의 모델이자 서비스 이름이라, 대화에서 <strong>엔진·앱·모델</strong> 중 어느 뜻으로 쓰였는지는 맥락으로 구분하면 됩니다.</div>
+  </div>
+</div>
+
+<div class="slide" id="p1-agent">
+  <div class="head"><div class="eyebrow">PART 2 — 핵심 전환</div><h2 class="s-title">"대화"가 아니라 <span class="clay">"위임"</span></h2></div>
+  <div class="body">
+    <div class="frame clay panel" style="margin-bottom:18px;text-align:center"><p class="lead" style="font-size:17px">챗봇은 <strong>답</strong>을 주고 실행은 내 몫. Cowork는 <strong>동료에게 맡기듯</strong> — 결과(목표)만 설명하면 <strong>결과물</strong>을 만들어 옵니다.</p></div>
+    <div class="grid g2">
+      <div>
+        <div class="clabel"><span class="ic" data-ic="pen" style="width:15px;height:15px"></span>내가 하는 것</div>
+        <ul class="blist">
+          <li><span class="bic" data-ic="target"></span><div><strong>결과(목표)를 설명</strong> — "무엇을 원하는지"</div></li>
+          <li><span class="bic" data-ic="folder"></span><div>필요한 <strong>맥락 · 파일 · 도구</strong>를 제공</div></li>
+          <li><span class="bic" data-ic="check"></span><div>중요한 순간에 <strong>승인</strong></div></li>
+        </ul>
+      </div>
+      <div>
+        <div class="clabel clay"><span class="ic" data-ic="robot" style="width:15px;height:15px"></span>Cowork가 하는 것</div>
+        <ul class="blist">
+          <li><span class="bic" data-ic="target"></span><div>작업을 <strong>계획</strong>으로 분해</div></li>
+          <li><span class="bic" data-ic="tools"></span><div>컨텍스트·파일·도구를 <strong>활용해 실행</strong></div></li>
+          <li><span class="bic" data-ic="loop"></span><div><strong>스스로 검토</strong>한 뒤 결과물 산출</div></li>
+        </ul>
+      </div>
+    </div>
+    <div class="body note" style="margin-top:16px"><strong>마인드셋:</strong> 코스 전체를 관통하는 한 가지 — 답을 받아 <strong>내가 실행</strong>하는 게 아니라, 동료에게 <strong>일을 맡기듯</strong> Cowork에 위임합니다.</div>
+  </div>
+</div>
+
+<div class="slide" id="p1-three">
+  <div class="head"><div class="eyebrow">PART 2 — 세 가지 Claude</div><h2 class="s-title">Chat · Cowork · Code, 언제 무엇을?</h2></div>
+  <div class="body">
+    <div class="grid g3">
+      <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="chat"></div><div class="lbl">Claude Chat</div><div class="desc" style="max-width:none"><span class="kbadge">생각 파트너</span><br><br>브레인스토밍·리서치·의사결정. 답을 주지만 <strong style="color:var(--ink)">실행은 내가</strong> 한다.</div></div>
+      <div class="frame clay feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="users"></div><div class="lbl">Claude Cowork</div><div class="desc" style="max-width:none"><span class="kbadge">일 파트너</span><br><br>문서 처리·멀티스텝 워크플로를 <strong style="color:var(--ink)">실제 도구에서 실행</strong>. 지식근로 전용.</div></div>
+      <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="terminal"></div><div class="lbl">Claude Code</div><div class="desc" style="max-width:none"><span class="kbadge">빌드 파트너</span><br><br>앱·툴 제작, 자동화 스크립트, 코드베이스 디버깅. <strong style="color:var(--ink)">개발자 대상</strong>.</div></div>
+    </div>
+    <div class="note" style="margin-top:18px"><strong>Cowork와 Code는 둘 다 에이전트</strong>입니다 — 대상 사용자만 다릅니다. Anthropic 정의: "지식근로를 위한 에이전트 시스템. 데스크탑에서 로컬 파일·앱에 연결해 멀티스텝 작업을 처음부터 끝까지 완수."</div>
+  </div>
+</div>
+
+<!-- 6 capabilities (reference image recreation) -->
+<!-- Claude 확장 도구 (생태계) -->
+<div class="slide" id="p1-ecosystem">
+  <div class="head"><div class="eyebrow">PART 2 — 생태계</div><h2 class="s-title">세 가지 너머 — <span class="clay">Claude 확장 도구</span></h2></div>
+  <div class="body">
+    <div class="frame clay panel" style="margin-bottom:18px;text-align:center"><p class="lead" style="font-size:16px">핵심은 <strong>Chat · Cowork · Code</strong>. 그 위에 특정 작업에 <strong>특화된 에이전트·확장</strong>이 더 있고, <strong>Cowork가 이들을 도구처럼 불러</strong> 씁니다.</p></div>
+    <div class="grid g4">
+      <div class="frame feat"><div class="ic" data-ic="browser"></div><div class="lbl">Claude in Chrome</div><div class="desc">브라우저에서 클릭·입력·양식·멀티탭 자동화 · 유료 플랜 베타</div></div>
+      <div class="frame clay feat"><div class="ic" data-ic="palette"></div><div class="lbl">Claude Design</div><div class="desc">대화로 프로토타입·비주얼 제작 · Canva·Figma 연동</div></div>
+      <div class="frame feat"><div class="ic" data-ic="sheet"></div><div class="lbl">Claude in Excel</div><div class="desc">스프레드시트 에이전트 · 데이터 분석·표 작성</div></div>
+      <div class="frame feat"><div class="ic" data-ic="window"></div><div class="lbl">Claude in PowerPoint</div><div class="desc">슬라이드 에이전트 · 발표 자료 생성</div></div>
+    </div>
+    <div class="note" style="margin-top:18px"><strong>Cowork가 지휘:</strong> 위 도구들을 작업 중 필요에 따라 호출합니다. Uber·Spotify 같은 앱 커넥터도 연결됩니다. <strong style="color:var(--ink)">모두 베타·순차 출시</strong>라 플랜·지역에 따라 제공 범위가 다를 수 있습니다.</div>
+  </div>
+</div>
+
+<div class="slide" id="p1-caps">
+  <div class="head"><div class="eyebrow">PART 2 — 핵심 역량</div><h2 class="s-title">Cowork를 강력하게 만드는 <span class="clay">6가지</span></h2></div>
+  <div class="body grid g3" style="gap:20px 36px">
+    <div class="frame feat"><div class="ic" data-ic="folder"></div><div class="lbl">로컬 파일 접근</div><div class="desc">내 컴퓨터에서 직접 파일을 읽고·쓰고·정리</div></div>
+    <div class="frame feat"><div class="ic" data-ic="code"></div><div class="lbl">코드 작성 · 실행</div><div class="desc">샌드박스(가상머신) 안에서 코드 실행 — 더 안전</div></div>
+    <div class="frame feat"><div class="ic" data-ic="tools"></div><div class="lbl">도구 연결</div><div class="desc">Gmail · Slack · Notion · Salesforce 등에 직접 연결</div></div>
+    <div class="frame feat"><div class="ic" data-ic="scroll"></div><div class="lbl">스킬 & 플러그인</div><div class="desc">재사용 가능한 워크플로를 레시피로 저장</div></div>
+    <div class="frame feat"><div class="ic" data-ic="loop"></div><div class="lbl">에이전트 루프</div><div class="desc">실행 후 <strong>스스로 검토</strong>하고 다음 단계를 결정</div></div>
+    <div class="frame feat"><div class="ic" data-ic="branch"></div><div class="lbl">서브에이전트</div><div class="desc">여러 작업을 병렬로 — 더 빠르고 편향 없는 결과</div></div>
+  </div>
+</div>
+
+<!-- 에이전트 루프 & 서브에이전트 -->
+<div class="slide" id="p1-loop">
+  <div class="head"><div class="eyebrow">PART 2 — 작동 원리</div><h2 class="s-title">에이전트 루프 & <span class="clay">서브에이전트</span></h2></div>
+  <div class="body">
+    <div class="clabel clay" style="margin-bottom:12px">에이전트 루프 — 챗봇이 하지 않는 것</div>
+    <div class="frame panel" style="margin-bottom:18px;padding:18px 20px">
+      <div class="pipe">
+        <div class="step"><div class="si" data-ic="target"></div><div class="st">계획</div><div class="sd">무엇이 필요한지 파악</div></div>
+        <div class="sep">→</div>
+        <div class="step"><div class="si" data-ic="bolt"></div><div class="st">실행</div><div class="sd">파일 편집·데이터·문서</div></div>
+        <div class="sep">→</div>
+        <div class="step"><div class="si" data-ic="check"></div><div class="st">자기 검토</div><div class="sd">작업이 맞는지 스스로 확인</div></div>
+        <div class="sep">→</div>
+        <div class="step"><div class="si" data-ic="loop"></div><div class="st">다음 결정</div><div class="sd">반복 · 재시도 · 다음 단계</div></div>
+      </div>
+    </div>
+    <div class="grid g2" style="align-items:start">
+      <div>
+        <div class="clabel clay">서브에이전트 — 병렬 실행</div>
+        <div class="frame panel"><p>"경쟁사 5곳을 조사" → 순차로 하면 1번은 좋지만 뒤로 갈수록 결과가 나빠지기 쉽습니다. 서브에이전트는 <strong>자기 자신을 5개 복제</strong>해 동시에 처리합니다.</p></div>
+      </div>
+      <div>
+        <div class="blist" style="margin-top:30px">
+          <li><span class="bic" data-ic="bolt"></span><div>훨씬 <strong>빠르고</strong> 각 결과의 품질이 고름</div></li>
+          <li><span class="bic" data-ic="shield"></span><div>경쟁사 2번 조사가 1번에 <strong>편향되지 않음</strong></div></li>
+          <li><span class="bic" data-ic="branch"></span><div>각자 별도 컨텍스트에서 일하고 <strong>요약만 메인에 보고</strong></div></li>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PART 3 COVER -->
+<div class="slide center" id="p2-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">PART 3</div>
+    <h1 class="s-title" style="font-size:clamp(38px,5.4vw,66px)">셋업 & 인터페이스</h1>
+    <p class="s-sub" style="max-width:520px;margin:18px auto 0">2분이면 시작 — 터미널·코딩 불필요<br>요금제 · 데스크탑 앱 · 태스크 · 워킹 폴더</p>
+  </div>
+</div>
+
+<!-- 요금제 & 설치 -->
+<div class="slide" id="p2-setup">
+  <div class="head"><div class="eyebrow">PART 3 — 시작하기</div><h2 class="s-title">요금제 & 설치 <small>2026년 5월 기준</small></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="lock" style="width:15px;height:15px"></span>Cowork는 유료 플랜 전용</div>
+      <div class="frame panel" style="padding:6px 20px;margin-bottom:12px">
+        <table class="tbl">
+          <thead><tr><th>플랜</th><th>가격(월)</th><th>비고</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Free</strong></td><td>$0</td><td>Cowork 미포함</td></tr>
+            <tr><td><strong>Pro</strong> <span class="kbadge">개인 추천</span></td><td><strong>$20</strong> · 연 $17</td><td>Cowork 포함</td></tr>
+            <tr><td><strong>Max</strong></td><td>$100 / $200</td><td>사용량 5x / 20x</td></tr>
+            <tr><td><strong>Team</strong></td><td>$25 / $125 · 좌석</td><td>Standard / Premium</td></tr>
+            <tr><td><strong>Enterprise</strong></td><td>문의</td><td>거버넌스·보안</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">조직(Team·Enterprise)은 <strong>관리자가 Cowork를 활성화</strong>해야 합니다. (조직 설정 → 제품 → Cowork)</div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="window" style="width:15px;height:15px"></span>설치 3단계</div>
+      <div class="flow">
+        <div class="item"><div class="n clay">1</div><div class="tx"><strong>유료 플랜 가입</strong><span>개인은 Pro부터 시작 권장</span></div></div>
+        <div class="item"><div class="n clay">2</div><div class="tx"><strong>데스크탑 앱 설치</strong> — <code style="font-family:monospace;color:var(--clay)">claude.com/download</code><span>Cowork는 웹이 아닌 데스크탑 앱에만 존재</span></div></div>
+        <div class="item"><div class="n clay">3</div><div class="tx"><strong>Cowork 탭 확인</strong><span>채팅 화면 상단에 Cowork 탭이 보이면 준비 완료</span></div></div>
+      </div>
+      <div class="warn" style="margin-top:14px"><strong>다른 종류의 AI가 아닙니다.</strong> 같은 Claude 엔진을 데스크탑이라는 다른 환경에서 쓰는 것입니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 인터페이스 투어 -->
+<div class="slide" id="p2-ui">
+  <div class="head"><div class="eyebrow">PART 3 — 인터페이스</div><h2 class="s-title">화면 구성 한눈에 보기</h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="frame clay panel" style="margin-bottom:14px"><div class="ttl">"채팅"이 아니라 "태스크"</div><p>Claude Chat의 대화는 <strong>chat</strong>, Cowork는 일을 위임하므로 모든 단위가 <strong>task(태스크)</strong>입니다.</p></div>
+      <div class="clabel clay">새 태스크 화면</div>
+      <ul class="blist">
+        <li><span class="bic" data-ic="chat"></span><div>지시(프롬프트)를 입력하는 대화창</div></li>
+        <li><span class="bic" data-ic="cpu"></span><div><strong>모델 선택기</strong> — 처음엔 항상 최고 모델(Opus) 권장</div></li>
+        <li><span class="bic" data-ic="folder"></span><div><strong>+ 버튼</strong> — 파일·폴더 추가 / 프로젝트에서 작업</div></li>
+      </ul>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="layers" style="width:15px;height:15px"></span>왼쪽 사이드바</div>
+      <div class="grid g2" style="gap:9px">
+        <div class="mini"><span class="ic" data-ic="folder"></span><span class="t">Projects</span></div>
+        <div class="mini"><span class="ic" data-ic="clock"></span><span class="t">Schedule</span></div>
+        <div class="mini"><span class="ic" data-ic="chart"></span><span class="t">Live Artifacts</span></div>
+        <div class="mini"><span class="ic" data-ic="dispatch"></span><span class="t">Dispatch</span></div>
+        <div class="mini"><span class="ic" data-ic="gear"></span><span class="t">Customize</span></div>
+        <div class="mini"><span class="ic" data-ic="loop"></span><span class="t">Recents</span></div>
+      </div>
+      <div class="note" style="margin-top:12px"><strong>Customize</strong>에서 스킬과 커넥터를 설정합니다. 작업 중에는 <strong>우측 패널</strong>에 Claude의 계획(진행 바)·접근 폴더·사용 도구가 표시됩니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 워킹 폴더 & 프로젝트 -->
+<div class="slide" id="p2-folder">
+  <div class="head"><div class="eyebrow">PART 3 — 파일 다루기</div><h2 class="s-title">워킹 폴더 vs <span class="clay">첨부</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="folder" style="width:15px;height:15px"></span>워킹 폴더 (마운트)</div>
+      <div class="frame panel" style="margin-bottom:12px"><p>폴더를 마운트하면 그 안의 파일을 <strong>읽기·쓰기·편집·삭제</strong>할 수 있습니다. 다운로드·데스크탑 폴더에는 기본적으로 접근하지 못합니다.</p></div>
+      <div class="warn"><strong>주의:</strong> 잘못 프롬프트하면 파일을 삭제할 수도 있습니다. 다시 못 구하는 파일은 <strong style="color:var(--ink)">복사본 폴더</strong>로 작업하세요.</div>
+      <div class="note" style="margin-top:12px"><strong>프로젝트</strong> = 워킹 폴더 + 더 편한 UI + 전용 메모리. 작업이 끝나면 결과물도 그 폴더에 저장됩니다.</div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="doc" style="width:15px;height:15px"></span>첨부 (+ 버튼)</div>
+      <div class="frame panel" style="margin-bottom:12px"><p>프롬프트와 함께 주는 파일. <strong>즉시 컨텍스트에 로드</strong>되어 바로 읽힙니다.</p></div>
+      <div class="frame clay panel">
+        <div style="font-size:14.5px;font-weight:800;color:var(--clay);margin-bottom:8px;letter-spacing:.04em">언제 무엇을?</div>
+        <div style="display:flex;flex-direction:column;gap:7px;font-size:15px;line-height:1.5">
+          <div><strong style="color:var(--ink)">첨부가 맞을 때</strong> — "이 디자인 실수 봐줘" 같은 <strong>스크린샷</strong></div>
+          <div><strong style="color:var(--ink)">워킹 폴더가 맞을 때</strong> — 읽고·수정·생성할 <strong>실제 파일</strong>(PDF·엑셀·md)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 첫 작업 데모 -->
+<div class="slide center" id="p5-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">PART 4</div>
+    <h1 class="s-title" style="font-size:clamp(36px,5vw,60px)">컨텍스트 엔지니어링</h1>
+    <p class="s-sub" style="max-width:560px;margin:18px auto 0">평범한 결과와 <span class="clay">탁월한 결과</span>를 가르는 것<br>이제는 프롬프트가 아니라 컨텍스트입니다</p>
+  </div>
+</div>
+
+<!-- 컨텍스트 윈도우 -->
+<div class="slide" id="dev-token">
+  <div class="head"><div class="eyebrow">PART 4 — 기본 개념</div><h2 class="s-title">토큰 & <span class="clay">컨텍스트</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="coin" style="width:15px;height:15px"></span>토큰 (Token)</div>
+      <div class="frame panel" style="margin-bottom:14px"><p>AI가 텍스트를 처리하는 <strong>기본 단위</strong>. 단어 하나일 수도, 단어보다 작은 조각일 수도 있습니다. (영어 1단어 ≈ 1~2토큰, 한글은 더 잘게 쪼개집니다)</p></div>
+      <div class="warn"><strong>비용과 직결:</strong> 입·출력 토큰 양에 따라 청구됩니다. 명확한 요청으로 <strong style="color:var(--ink)">한 번에</strong> 원하는 결과를 얻는 게 효율적입니다.</div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="cpu" style="width:15px;height:15px"></span>컨텍스트 (Context)</div>
+      <div class="frame panel" style="margin-bottom:14px"><p>AI가 현재 대화에서 <strong>참고하는 정보의 범위</strong>. "아까 그거"라고 해도 이해하는 이유가 바로 컨텍스트입니다.</p></div>
+      <div class="frame clay panel"><div class="ttl"><span class="ic" data-ic="book"></span>더 깊이</div><p>컨텍스트가 쌓이는 <strong>'컨텍스트 윈도우'</strong>와 이를 설계·관리하는 방법은 <strong>바로 이어지는 슬라이드</strong>에서 자세히 다룹니다.</p></div>
+    </div>
+  </div>
+  <div class="body note" style="margin-top:16px"><strong>한 줄 정리:</strong> <strong>토큰</strong> = 처리·비용의 <strong>단위</strong>, <strong>컨텍스트</strong> = AI가 참고하는 <strong>정보 범위</strong>. 둘을 의식하면 더 빠르고 저렴하게 쓸 수 있습니다.</div>
+</div>
+
+<div class="slide" id="p7-usage">
+  <div class="head"><div class="eyebrow">PART 4 — 사용량 & 한도</div><h2 class="s-title">한도는 어떻게 <span class="clay">작동하나</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay">두 종류의 한도</div>
+      <div class="frame panel" style="margin-bottom:12px;padding:16px 20px">
+        <div class="perm"><span class="pd" style="background:var(--clay)"></span><span class="pn">세션</span><span class="px">5시간 롤링 윈도우 — 가장 먼저 닿음</span></div>
+        <div class="perm"><span class="pd" style="background:var(--ink2)"></span><span class="pn">주간</span><span class="px">한 주 동안의 총 사용량</span></div>
+      </div>
+      <div class="note">Chat·Cowork·Code가 <strong>같은 한도</strong>를 공유합니다. 정확한 토큰 수는 비공개이며 <strong style="color:var(--ink)">가용 컴퓨팅에 따라 변동</strong>됩니다(설정 → 사용량에서 % 확인). 한도 초과 시 크레딧을 충전해 계속 사용 가능.</div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="bolt" style="width:15px;height:15px"></span>한도를 아끼는 법</div>
+      <div class="blist">
+        <li><span class="bic" data-ic="loop"></span><div><strong>긴 대화 피하기</strong> — 매 메시지마다 전체 컨텍스트 재처리</div></li>
+        <li><span class="bic" data-ic="scroll"></span><div><strong>스킬 활용</strong> — 발견(시행착오)을 한 번만, 이후엔 스크립트 실행</div></li>
+        <li><span class="bic" data-ic="chat"></span><div>단순 질문은 <strong>Cowork 말고 Chat</strong>에서 — 더 빠르고 저렴</div></li>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="p7-tokens">
+  <div class="head"><div class="eyebrow">PART 4 — 사용량 & 한도</div><h2 class="s-title">토큰 절약 — <span class="clay">맥락을 가볍게</span></h2></div>
+  <div class="body">
+    <div class="frame clay panel" style="margin-bottom:16px;text-align:center"><p class="lead" style="font-size:16px">매 턴마다 <strong>전체 맥락</strong>(파일·지침·이전 대화)이 다시 처리됩니다. 절약의 핵심은 하나 — <strong>맥락을 가볍게 유지</strong>하기.</p></div>
+    <div class="grid g3">
+      <div class="frame panel">
+        <div class="ttl"><span class="ic" data-ic="target"></span>① 도구 선택</div>
+        <ul class="blist" style="margin-top:10px">
+          <li><span class="bic" data-ic="chat"></span><div>단순 작업은 Cowork 말고 <strong>Chat</strong>에서 (더 빠르고 저렴)</div></li>
+          <li><span class="bic" data-ic="cpu"></span><div>일상은 <strong>Sonnet</strong>, 복잡한 다단계 추론만 <strong>Opus</strong> · effort도 작업에 맞게</div></li>
+        </ul>
+      </div>
+      <div class="frame panel">
+        <div class="ttl"><span class="ic" data-ic="folder"></span>② 맥락 최소화</div>
+        <ul class="blist" style="margin-top:10px">
+          <li><span class="bic" data-ic="folder"></span><div>필요 없으면 <strong>폴더 0개</strong> · 필요한 파일·도구만 연결</div></li>
+          <li><span class="bic" data-ic="scroll"></span><div>전역 지침·about-me는 <strong>짧게</strong> (매 세션 고정 비용)</div></li>
+          <li><span class="bic" data-ic="loop"></span><div>주제가 바뀌면 <strong>새 태스크</strong> — 긴 대화는 비용이 복리</div></li>
+        </ul>
+      </div>
+      <div class="frame clay panel">
+        <div class="ttl"><span class="ic" data-ic="book"></span>③ 재사용</div>
+        <ul class="blist" style="margin-top:10px">
+          <li><span class="bic" data-ic="doc"></span><div>세션 끝에 <strong>session-notes.md</strong>로 정리 → 다음 세션은 그걸 먼저 읽기</div></li>
+          <li><span class="bic" data-ic="layers"></span><div>반복 업무는 <strong>프로젝트</strong> — 지식이 커지면 자동 <strong>RAG</strong>로 관련 청크만 검색</div></li>
+        </ul>
+      </div>
+    </div>
+    <div class="note" style="margin-top:16px"><strong>출발점은 측정:</strong> 설정 → 사용량에서 어떤 패턴이 토큰을 많이 쓰는지 확인하세요. (코워크 세션 하나가 일반 채팅 여러 개분 사용량을 쓰기도 합니다)</div>
+  </div>
+</div>
+
+<div class="slide" id="p5-window">
+  <div class="head"><div class="eyebrow">PART 4 — 기초</div><h2 class="s-title">컨텍스트 윈도우란?</h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="frame clay panel" style="margin-bottom:14px"><p class="lead" style="font-size:17px">모델이 응답을 만들 때 <strong>볼 수 있는 모든 정보</strong>를 담는 상자. 단위는 토큰입니다.</p></div>
+      <div class="frame panel" style="text-align:center;margin-bottom:12px">
+        <div class="bignum" style="justify-content:center"><span class="n">1M</span><span class="u">토큰 (최신 Opus 기준)</span></div>
+        <p style="font-size:14.5px;color:var(--muted);margin-top:8px">≈ 75만 단어 ≈ 소설 9~10권 분량</p>
+      </div>
+      <div class="note">빈 새 태스크에서도 약 <strong>5만 토큰</strong>이 이미 사용됩니다(시스템 프롬프트 등). <code style="font-family:monospace;color:var(--clay)">/context</code> 스킬로 사용량을 확인하세요.</div>
+    </div>
+    <div>
+      <div class="clabel clay">무엇이 채우나</div>
+      <div class="blist">
+        <li><span class="bic" data-ic="gear"></span><div><strong>시스템 프롬프트</strong> — 에이전트 작동 방식(기본 소모)</div></li>
+        <li><span class="bic" data-ic="plug"></span><div><strong>연결된 도구</strong> — 일부는 지연 로딩으로 최적화</div></li>
+        <li><span class="bic" data-ic="scroll"></span><div><strong>스킬</strong> — 메타데이터 + 실행 시 인스트럭션</div></li>
+        <li><span class="bic" data-ic="chat"></span><div><strong>메시지</strong> — 대화·읽은 파일·툴 호출 결과 (가장 빨리 증가)</div></li>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 컨텍스트가 너무 많으면 -->
+<div class="slide" id="p5-rot">
+  <div class="head"><div class="eyebrow">PART 4 — 부작용</div><h2 class="s-title">컨텍스트가 <span class="clay">너무 많으면</span></h2></div>
+  <div class="body grid g2" style="gap:22px 34px">
+    <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="alert"></div><div class="lbl">컨텍스트 로트</div><div class="desc" style="max-width:none">정보가 많아질수록 답이 나빠집니다. 앞서 한 말을 잊고, 추론 품질이 떨어집니다.</div></div>
+    <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="puzzle"></div><div class="lbl">툴 혼동</div><div class="desc" style="max-width:none">도구가 많을수록 비슷한 이름끼리 경쟁 — 어떤 툴을 쓸지 헷갈립니다.</div></div>
+    <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="clock"></div><div class="lbl">느린 응답</div><div class="desc" style="max-width:none">매 메시지마다 전체 컨텍스트를 다시 처리 — 클수록 더 오래 걸립니다.</div></div>
+    <div class="frame clay feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="bolt"></div><div class="lbl">사용량 폭증</div><div class="desc" style="max-width:none"><strong style="color:var(--ink)">가장 큰 문제.</strong> 컨텍스트가 클수록 세션·주간 한도를 훨씬 빨리 소진합니다.</div></div>
+  </div>
+</div>
+
+<!-- 5가지 레버 -->
+<div class="slide" id="p5-levers">
+  <div class="head"><div class="eyebrow">PART 4 — 핵심</div><h2 class="s-title">컨텍스트 엔지니어의 <span class="clay">5가지 레버</span></h2></div>
+  <div class="body">
+    <div class="flow">
+      <div class="item"><div class="n clay">1</div><div class="tx"><strong>대화 (Conversation)</strong> — 보내는 프롬프트와 첨부, 텍스트<span>지금 이 작업에 필요한 정보를 어떻게 전달할지</span></div></div>
+      <div class="item"><div class="n clay">2</div><div class="tx"><strong>워킹 폴더</strong> — Claude가 접근하는 파일·폴더<span>필요한 폴더만 마운트</span></div></div>
+      <div class="item"><div class="n clay">3</div><div class="tx"><strong>커넥터</strong> — 연결된 도구에서 데이터를 가져오고 동작 수행<span>현재 작업에 필요한 것만 활성화</span></div></div>
+      <div class="item"><div class="n clay">4</div><div class="tx"><strong>스킬</strong> — 반복 워크플로의 지시 묶음<span>같은 지시를 매번 붙여넣지 말 것</span></div></div>
+      <div class="item"><div class="n clay">5</div><div class="tx"><strong>인스트럭션</strong> — 모든 작업 전에 항상 먼저 읽는 저장된 지침<span>일반 / Cowork / 폴더(CLAUDE.md) 단위</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 인스트럭션 & 메모리 + 베스트 프랙티스 -->
+<div class="slide" id="p5-instr">
+  <div class="head"><div class="eyebrow">PART 4 — 인스트럭션 & 메모리</div><h2 class="s-title">항상 먼저 읽히는 <span class="clay">지침</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="layers" style="width:15px;height:15px"></span>인스트럭션 계층</div>
+      <div class="flow" style="margin-bottom:12px">
+        <div class="item"><div class="n ol">전역</div><div class="tx"><strong>일반 인스트럭션</strong><span>Chat·Cowork 공통 — 내 역할·회사·선호</span></div></div>
+        <div class="item"><div class="n clay">Cowork</div><div class="tx"><strong>글로벌 Cowork 인스트럭션</strong><span>모든 Cowork 세션에 적용</span></div></div>
+        <div class="item"><div class="n ol">폴더</div><div class="tx"><code style="font-family:monospace;color:var(--clay)">CLAUDE.md</code><span>그 폴더 작업 시 규칙·파일명·금지사항</span></div></div>
+      </div>
+      <div class="note"><strong>메모리:</strong> 켜두면 Claude가 나에 대해 기억해 컨텍스트에 자동 반영. 월 1회 정도 검토·편집 권장.</div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="check" style="width:15px;height:15px"></span>베스트 프랙티스</div>
+      <div class="blist">
+        <li><span class="bic" data-ic="scroll"></span><div>같은 지시를 반복하지 말고 <strong>스킬로</strong></div></li>
+        <li><span class="bic" data-ic="loop"></span><div>새 작업은 <strong>새 태스크</strong>로 — 긴 대화 금지</div></li>
+        <li><span class="bic" data-ic="folder"></span><div>필요 없는 파일·도구는 <strong>붙이지 않기</strong></div></li>
+        <li><span class="bic" data-ic="sheet"></span><div>대용량 데이터는 <strong>로컬 파일(CSV) 먼저</strong>, 그다음 커넥터</div></li>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PART 7 COVER -->
+<div class="slide center" id="p7-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">PART 5</div>
+    <h1 class="s-title" style="font-size:clamp(36px,5vw,60px)">고급 기능</h1>
+    <p class="s-sub" style="max-width:540px;margin:18px auto 0">플러그인 · 라이브 아티팩트<br><span class="clay">Claude를 더 강력하게</span> 쓰는 법</p>
+  </div>
+</div>
+
+<!-- 플러그인 & 라이브 아티팩트 -->
+<div class="slide" id="p7-power">
+  <div class="head"><div class="eyebrow">PART 5 — 고급 기능</div><h2 class="s-title">플러그인 & <span class="clay">라이브 아티팩트</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="pkg" style="width:15px;height:15px"></span>플러그인 vs 스킬</div>
+      <div class="frame panel" style="margin-bottom:12px"><p><strong>스킬</strong> = 특정 작업을 어떻게 할지. <strong>플러그인</strong> = 여러 스킬 + 필요한 커넥터(+에이전트·훅)를 묶어 <strong>한 번에 공유·설치</strong>.</p></div>
+      <div class="note">신규 입사자가 플러그인 하나만 설치하면 관련 <strong>스킬과 커넥터가 한꺼번에</strong> 세팅됩니다. Cowork·Code 양쪽에서 동작.</div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="chart" style="width:15px;height:15px"></span>라이브 아티팩트</div>
+      <div class="frame panel" style="margin-bottom:12px"><p>데이터 분석을 시키며 <strong>"라이브 아티팩트로 만들어줘"</strong> → CSV·커넥터 데이터로 인터랙티브 대시보드 생성.</p></div>
+      <div class="note"><strong>공유:</strong> 팀/엔터프라이즈는 링크로 공유(같은 조직 내), 개인은 웹 퍼블리시 가능. 편집은 만든 대화로 돌아가 피드백을 주면 됩니다.</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide center" id="p3-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">PART 6</div>
+    <h1 class="s-title" style="font-size:clamp(38px,5.4vw,66px)">커넥터 — 도구 연결</h1>
+    <p class="s-sub" style="max-width:520px;margin:18px auto 0">일은 파일이 아니라 <span class="clay">도구</span> 안에서 일어납니다<br>Gmail · Slack · Notion · CRM에 직접 연결</p>
+  </div>
+</div>
+
+<!-- 3가지 연결 방식 -->
+<div class="slide" id="p3-perms">
+  <div class="head"><div class="eyebrow">PART 6 — 권한 관리</div><h2 class="s-title">커넥터 권한 <span class="clay">3단계</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay">툴(tool) = 그 도구에서 할 수 있는 동작</div>
+      <div class="frame panel" style="margin-bottom:14px"><p><strong>읽기 전용 툴</strong> — 이메일 검색·스레드 조회 등 정보 추출<br><strong>쓰기/삭제 툴</strong> — 초안 작성·라벨 추가·발송 등 변경</p></div>
+      <div class="frame clay panel">
+        <div class="perm"><span class="pd" style="background:var(--ok)"></span><span class="pn">항상 허용</span><span class="px">매번 묻지 않고 바로 실행</span></div>
+        <div class="perm"><span class="pd" style="background:var(--clay)"></span><span class="pn">승인 필요</span><span class="px">실행 전에 권한을 요청</span></div>
+        <div class="perm"><span class="pd" style="background:var(--warn)"></span><span class="pn">차단</span><span class="px">어떤 경우에도 실행 금지</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="shield" style="width:15px;height:15px"></span>추천 기본 설정</div>
+      <div class="blist">
+        <li><span class="bic" data-ic="check"></span><div><strong>읽기 전용 → 항상 허용</strong> — 위험이 거의 없음</div></li>
+        <li><span class="bic" data-ic="alert"></span><div><strong>쓰기/삭제 → 승인 필요</strong>로 시작</div></li>
+        <li><span class="bic" data-ic="mail"></span><div><strong>이메일 발송</strong>처럼 위험한 동작은 계속 승인 필요로 유지</div></li>
+      </div>
+      <div class="note" style="margin-top:14px"><strong>팁:</strong> 커넥터는 자주 업데이트됩니다. 새 기능이 안 보이면 커넥터 옆 <strong>⋯ → 툴 목록 새로고침</strong>을 실행하세요.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 커스텀 MCP -->
+<div class="slide" id="p3-mcp">
+  <div class="head"><div class="eyebrow">PART 6 — 커스텀 연결</div><h2 class="s-title">커넥터가 없을 땐? <span class="clay">커스텀 MCP</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay">연결 흐름</div>
+      <div class="flow">
+        <div class="item"><div class="n clay">1</div><div class="tx"><strong>도구 이름 + "MCP server" 검색</strong><span>예: <code style="font-family:monospace;color:var(--clay)">circle.so MCP server</code></span></div></div>
+        <div class="item"><div class="n clay">2</div><div class="tx"><strong>개발자 문서에서 서버 URL 확보</strong><span>"Connection URL"을 복사</span></div></div>
+        <div class="item"><div class="n clay">3</div><div class="tx">Customize → 커넥터 → <strong>+ → 커스텀 커넥터 추가</strong><span>이름 + 원격 MCP 서버 URL 입력</span></div></div>
+        <div class="item"><div class="n clay">4</div><div class="tx"><strong>Connect</strong> 후 로그인(OAuth)</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="frame clay panel" style="margin-bottom:14px"><div class="ttl"><span class="ic" data-ic="plug"></span>MCP란?</div><p><strong>Model Context Protocol</strong> — 모든 Claude 커넥터가 기반하는 표준 규약. 일단 연결되면 빌트인 커넥터와 <strong>기능·권한 설정이 동일</strong>합니다.</p></div>
+      <div class="frame clay panel"><div class="ttl"><span class="ic" data-ic="bolt"></span>새 커넥터 연결 시 습관</div><p>새 도구를 붙였다면 곧장 물어보세요 — <strong>"이 커넥터로 가능한 모든 동작과, 우리 워크플로에 맞는 활용 사례를 알려줘."</strong> 미처 생각 못 한 기능을 발견하게 됩니다.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- PART 5 COVER -->
+<div class="slide center" id="p4-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">PART 7</div>
+    <h1 class="s-title" style="font-size:clamp(38px,5.4vw,66px)">스킬 (Skills)</h1>
+    <p class="s-sub" style="max-width:540px;margin:18px auto 0">이 코스 전체에서 <span class="clay">가장 큰 잠금 해제</span><br>Claude를 "내 방식"으로 훈련시키는 법</p>
+  </div>
+</div>
+
+<!-- 스킬이란 + 문제 -->
+<div class="slide" id="p4-what">
+  <div class="head"><div class="eyebrow">PART 7 — 정의</div><h2 class="s-title">스킬 = <span class="clay">파일 캐비닛</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel">스킬이 없으면 (긴 시스템 프롬프트)</div>
+      <div class="frame panel" style="margin-bottom:12px"><p>콘텐츠 에이전트 하나에 LinkedIn·블로그·뉴스레터·웹카피 지침을 <strong>전부 시스템 프롬프트에</strong> 욱여넣음 → 컨텍스트를 잡아먹고, 지침이 서로 <strong>뒤섞여 혼동</strong>.</p></div>
+      <div class="warn">블로그를 쓰는 중에도 LinkedIn·뉴스레터 지침이 항상 메모리에 남아 방해가 됩니다.</div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="scroll" style="width:15px;height:15px"></span>스킬이 있으면</div>
+      <div class="frame clay panel" style="margin-bottom:12px"><p>각 작업법을 <strong>서랍</strong>에 정리해두고, LinkedIn 글이 필요할 때만 해당 서랍을 열어 읽고 실행합니다.</p></div>
+      <div class="frame clay panel"><div class="ttl"><span class="ic" data-ic="check"></span>한 줄 정의</div><p>에이전트에게 <strong>특정 작업을 어떻게 수행할지</strong> 알려주는 재사용 가능한 지시 묶음 (= 에이전트 스킬).</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 스킬 3계층 -->
+<div class="slide" id="p4-layers">
+  <div class="head"><div class="eyebrow">PART 7 — 구조</div><h2 class="s-title">스킬의 <span class="clay">3계층</span> — 읽히는 시점이 다르다</h2></div>
+  <div class="body">
+    <div class="grid g3">
+      <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="target"></div><div class="lbl">① 메타데이터</div><div class="desc" style="max-width:none">스킬 이름 + 짧은 설명<br><br><span class="kbadge">항상 컨텍스트에</span><br>Claude가 언제 쓸지 판단하는 "서랍 라벨"</div></div>
+      <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="doc"></div><div class="lbl">② 인스트럭션</div><div class="desc" style="max-width:none"><code style="font-family:monospace;color:var(--clay)">SKILL.md</code> — 단계별 워크플로<br><br><span class="kbadge">스킬 실행 시</span><br>아주 긴 프롬프트(마크다운)</div></div>
+      <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="pkg"></div><div class="lbl">③ 리소스</div><div class="desc" style="max-width:none">폰트·로고·이미지·스크립트<br><br><span class="kbadge">필요할 때만</span><br>해당 작업에 쓰는 파일만 접근</div></div>
+    </div>
+    <div class="note" style="margin-top:18px"><strong>효율의 비밀:</strong> 메타데이터만 항상 보이고, 인스트럭션은 트리거될 때, 리소스는 그때 필요한 것만 읽힙니다 — 그래서 토큰을 훨씬 적게 씁니다.</div>
+  </div>
+</div>
+
+<!-- 스킬 만드는 프로세스 -->
+<div class="slide" id="p4-build">
+  <div class="head"><div class="eyebrow">PART 7 — 제작 프로세스</div><h2 class="s-title">스킬 만드는 <span class="clay">올바른 순서</span></h2></div>
+  <div class="body">
+    <div class="frame panel" style="margin-bottom:16px;padding:18px 20px">
+      <div class="pipe">
+        <div class="step"><div class="si" data-ic="users"></div><div class="st">① 함께 한 번 한다</div><div class="sd">스킬 생성기부터 열지 말 것</div></div>
+        <div class="sep">→</div>
+        <div class="step"><div class="si" data-ic="check"></div><div class="st">② 검토 · 수정</div><div class="sd">결과가 맞을 때까지 대화하듯</div></div>
+        <div class="sep">→</div>
+        <div class="step"><div class="si" data-ic="scroll"></div><div class="st">③ 스킬로 저장</div><div class="sd">Skill Creator로 패키징</div></div>
+        <div class="sep">→</div>
+        <div class="step"><div class="si" data-ic="bolt"></div><div class="st">④ 새 태스크에서 테스트</div><div class="sd">/스킬명 으로 호출</div></div>
+      </div>
+    </div>
+    <div class="grid g2">
+      <div class="frame clay panel"><div class="ttl"><span class="ic" data-ic="alert"></span>흔한 실수</div><p>곧바로 Skill Creator를 열고 "이런 스킬 만들어줘"라고 하는 것. <strong>먼저 작업을 함께 해보며</strong> 가능한지·내 방식대로 되는지 확인하세요. 당신이 전문가입니다.</p></div>
+      <div class="frame clay panel"><div class="ttl"><span class="ic" data-ic="sparkle"></span>꼭 켜둘 스킬</div><p>Anthropic 제공 <strong>Skill Creator</strong> — 모든 스킬을 만드는 스킬. 자체 평가(eval) 루프로 짧은/긴 입력까지 자동 테스트한 뒤 패키징합니다.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 스킬 업데이트 & 공유 -->
+<div class="slide" id="p4-share">
+  <div class="head"><div class="eyebrow">PART 7 — 운영</div><h2 class="s-title">스킬 <span class="clay">업데이트 & 공유</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="loop" style="width:15px;height:15px"></span>업데이트</div>
+      <div class="frame panel" style="margin-bottom:12px"><p>① 변경 작업을 먼저 시켜 결과를 확인 → ② <strong>Skill Creator로 스킬 갱신</strong> → ③ <strong>Save skill</strong> 클릭(필수). "기존 스킬 교체" 경고가 뜨면 업로드·교체.</p></div>
+      <div class="note"><strong>저장을 잊지 마세요:</strong> 생성·수정 모두 마지막에 <strong style="color:var(--ink)">Save skill</strong>을 눌러야 계정에 반영됩니다.</div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="share" style="width:15px;height:15px"></span>공유 2가지</div>
+      <div class="blist">
+        <li><span class="bic" data-ic="users"></span><div><strong>팀/엔터프라이즈</strong> — Share로 팀 전체 또는 특정 멤버에게. 소유자가 수정하면 <strong>모두에게 즉시 반영</strong></div></li>
+        <li><span class="bic" data-ic="pkg"></span><div><strong>개인</strong> — ⋯ → Download(<code style="font-family:monospace;color:var(--clay)">.skill</code> = zip). 받은 사람이 임포트하면 <strong>그 시점 버전만</strong> 복사(연결 끊김)</div></li>
+      </div>
+      <div class="warn" style="margin-top:12px"><strong>핵심 레버리지:</strong> 인터넷 스킬을 가져오더라도 <strong style="color:var(--ink)">우리 회사 방식·IP</strong>로 커스터마이즈하는 것이 진짜 가치입니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PART 6 COVER -->
+<div class="slide center" id="cc-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">PART 8 · Claude Code 준비</div>
+    <h1 class="s-title" style="font-size:clamp(38px,5.4vw,66px)"><span class="clay">컴퓨터</span> 기초 용어</h1>
+    <p class="s-sub" style="max-width:560px;margin:18px auto 0">Claude Code를 이해하기 위한 필수 배경지식<br>외울 필요 없습니다 — "이런 게 있구나" 정도면 충분합니다</p>
+  </div>
+</div>
+
+<div class="slide" id="cc-guicli">
+  <div class="head"><div class="eyebrow">PART 8 — 컴퓨터 기초</div><h2 class="s-title">GUI vs <span class="clay">CLI</span></h2></div>
+  <div class="body">
+    <div class="grid g2" style="margin-bottom:16px">
+      <div>
+        <div class="clabel"><span class="ic" data-ic="window" style="width:15px;height:15px"></span>GUI — Graphical User Interface</div>
+        <div class="frame panel"><p>마우스와 화면으로 조작. 버튼 클릭 → 좌표 파악 → 기능 실행이라는 복잡한 과정이 뒤에서 일어납니다.<br><strong>예시:</strong> Windows 탐색기, 크롬 브라우저</p></div>
+      </div>
+      <div>
+        <div class="clabel clay"><span class="ic" data-ic="terminal" style="width:15px;height:15px"></span>CLI — Command Line Interface</div>
+        <div class="frame clay panel"><p>명령어를 글자로 입력. 컴퓨터에겐 더 직관적·효율적이고 <strong>자동화에 유리</strong>합니다(저장 후 반복 실행).<br><strong>터미널</strong> — CLI로 소통하는 검은 화면 앱</p></div>
+      </div>
+    </div>
+    <div class="grid g3">
+      <div class="frame feat"><div class="ic" data-ic="terminal"></div><div class="lbl">Windows Terminal</div><div class="desc">MS 공식 터미널. Win11 기본 내장. 시작 메뉴 "Terminal" 검색</div></div>
+      <div class="frame clay feat"><div class="ic" data-ic="bolt"></div><div class="lbl">PowerShell 7 <span class="kbadge">추천</span></div><div class="desc">개발 환경 최적화 셸. <code style="font-family:monospace;color:var(--clay)">winget install Microsoft.PowerShell</code></div></div>
+      <div class="frame feat"><div class="ic" data-ic="branch"></div><div class="lbl">Git Bash</div><div class="desc">Git 설치 시 제공. <code style="font-family:monospace;color:var(--clay)">ls·curl</code> 등 Unix 명령을 Windows에서</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="cc-cloud">
+  <div class="head"><div class="eyebrow">PART 8 — 컴퓨터 기초</div><h2 class="s-title">로컬 vs <span class="clay">클라우드</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel"><span class="ic" data-ic="window" style="width:15px;height:15px"></span>로컬 (Local) = 내 컴퓨터</div>
+      <div class="frame panel" style="margin-bottom:14px"><p>"로컬에서 실행한다" = 내 컴퓨터에서 실행. 파일이 내 하드디스크에 저장됩니다.</p></div>
+      <div class="clabel clay"><span class="ic" data-ic="cloud" style="width:15px;height:15px"></span>클라우드 (Cloud) = 인터넷 어딘가의 서버</div>
+      <div class="frame clay panel"><p>구글 드라이브·네이버 클라우드가 대표적. 내 파일이 회사 서버 컴퓨터에 저장됩니다.</p></div>
+    </div>
+    <div>
+      <div class="clabel clay">Claude에서 이 개념이 중요한 이유</div>
+      <div class="frame panel" style="margin-bottom:12px"><div class="ttl"><span class="ic" data-ic="cloud"></span>Claude 웹 버전</div><p><strong>클라우드</strong> 방식. Anthropic 서버에서 AI가 돌아가고 결과만 브라우저에 표시 — 내 컴퓨터 파일 접근은 어렵습니다.</p></div>
+      <div class="frame clay panel"><div class="ttl"><span class="ic" data-ic="terminal"></span>Claude Code / Cowork</div><p><strong>로컬 + 클라우드</strong> 조합. AI 두뇌는 클라우드에서 빌리고, 내 컴퓨터 파일을 직접 읽고·쓰고·생성합니다.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide center" id="web-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">PART 9 · Claude Code 준비</div>
+    <h1 class="s-title" style="font-size:clamp(38px,5.4vw,66px)"><span class="clay">웹 개발</span> 기초 용어</h1>
+    <p class="s-sub" style="max-width:560px;margin:18px auto 0">Claude Code로 웹 앱을 만들 때 자주 만나는 개념<br>프론트엔드 · 백엔드 · HTML · CSS · JavaScript</p>
+  </div>
+</div>
+
+<div class="slide" id="web-frontback">
+  <div class="head"><div class="eyebrow">PART 9 — 웹 개발</div><h2 class="s-title">프론트엔드 vs <span class="clay">백엔드</span></h2></div>
+  <div class="body">
+    <div class="grid g2" style="margin-bottom:16px">
+      <div>
+        <div class="clabel clay"><span class="ic" data-ic="palette" style="width:15px;height:15px"></span>프론트엔드 (Frontend)</div>
+        <div class="frame clay panel"><p><strong>눈에 보이는 모든 것</strong> — 버튼·이미지·색상·레이아웃·텍스트<br><br>식당 비유: <strong>손님 홀 · 메뉴판 · 인테리어</strong></p></div>
+      </div>
+      <div>
+        <div class="clabel"><span class="ic" data-ic="gear" style="width:15px;height:15px"></span>백엔드 (Backend)</div>
+        <div class="frame panel"><p><strong>눈에 보이지 않는 처리</strong> — 로그인 확인·데이터 저장·결제 처리<br><br>식당 비유: <strong>주방 · 재료 창고 · 주문 시스템</strong></p></div>
+      </div>
+    </div>
+    <div class="grid g3">
+      <div class="frame feat"><div class="ic" data-ic="code"></div><div class="lbl">HTML</div><div class="desc"><strong>뼈대</strong> — 제목·버튼·이미지 위치<br><span style="color:var(--muted)">집의 기둥과 벽</span></div></div>
+      <div class="frame feat"><div class="ic" data-ic="palette"></div><div class="lbl">CSS</div><div class="desc"><strong>디자인</strong> — 색상·크기·폰트<br><span style="color:var(--muted)">페인트칠·인테리어</span></div></div>
+      <div class="frame feat"><div class="ic" data-ic="bolt"></div><div class="lbl">JavaScript</div><div class="desc"><strong>동작</strong> — 클릭·애니메이션·상호작용<br><span style="color:var(--muted)">조명스위치·자동문</span></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="dev-api">
+  <div class="head"><div class="eyebrow">PART 9 — 웹 개발</div><h2 class="s-title">API <small>— Application Programming Interface</small></h2></div>
+  <div class="body">
+    <div class="frame panel" style="margin-bottom:16px;padding:18px 20px">
+      <div class="pipe">
+        <div class="step"><div class="si" data-ic="window"></div><div class="st">날씨 앱</div><div class="sd">"서울 날씨 알려줘"</div></div>
+        <div class="sep">→</div>
+        <div class="step"><div class="si" data-ic="plug"></div><div class="st">API</div><div class="sd">약속된 요청·응답 규칙</div></div>
+        <div class="sep">→</div>
+        <div class="step"><div class="si" data-ic="server"></div><div class="st">기상청 서버</div><div class="sd">"25도입니다"</div></div>
+      </div>
+    </div>
+    <p class="lead" style="text-align:center;font-size:16px;margin-bottom:16px">프로그램끼리 서로 <strong>소통하는 방법</strong>입니다</p>
+    <div class="grid g2">
+      <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="key"></div><div class="lbl">API 키 (Key)</div><div class="desc" style="max-width:none">API를 쓰기 위한 <strong style="color:var(--ink)">비밀번호</strong>. 긴 문자열 형태로, <strong style="color:var(--ink)">절대 노출 금지</strong>. 사용량에 따라 비용이 청구됩니다.</div></div>
+      <div class="frame feat" style="align-items:flex-start;text-align:left"><div class="ic" data-ic="plug"></div><div class="lbl">Claude에서의 API</div><div class="desc" style="max-width:none">Claude Code가 구글 드라이브·Gmail 등 외부 서비스에 접근할 때 API를 통합니다. (커넥터·MCP의 토대)</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="web-script">
+  <div class="head"><div class="eyebrow">PART 9 — 웹 개발</div><h2 class="s-title">스크립트 & <span class="clay">워크플로우</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="doc" style="width:15px;height:15px"></span>스크립트 (Script)</div>
+      <div class="frame panel" style="margin-bottom:14px"><p>컴퓨터가 실행하는 <strong>명령어 묶음</strong>. "① 파일 열기 → ② 수정 → ③ 저장"처럼 순서대로 실행하는 <strong>자동화의 기본 단위</strong>입니다.</p></div>
+      <div class="note">비유: <strong>요리 레시피 하나</strong></div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="loop" style="width:15px;height:15px"></span>워크플로우 (Workflow)</div>
+      <div class="frame clay panel" style="margin-bottom:14px"><p>여러 작업이 연결된 <strong>전체 과정</strong>. "이메일 도착 → 첨부 저장 → 정리 → 슬랙 알림"처럼 여러 단계의 흐름입니다.</p></div>
+      <div class="note">비유: <strong>식당 전체 운영</strong> — 주문 → 조리 → 서빙 → 결제</div>
+    </div>
+  </div>
+  <div class="body note" style="margin-top:16px"><strong>Cowork와의 연결:</strong> 앞서 만든 <strong>스킬</strong>이 곧 "스크립트", 스케줄 자동화·여러 도구를 잇는 흐름이 곧 "워크플로우"입니다.</div>
+</div>
+
+<!-- ===== PART 10 : Git & GitHub ===== -->
+<div class="slide center" id="git-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">PART 10 · Claude Code 준비</div>
+    <h1 class="s-title" style="font-size:clamp(38px,5.4vw,66px)">Git & <span class="clay">GitHub</span></h1>
+    <p class="s-sub" style="max-width:560px;margin:18px auto 0">코드를 안전하게 관리하고 협업·배포하기<br>버전 관리 · 저장소(Repo) · 배포(Deploy)</p>
+  </div>
+</div>
+
+<div class="slide" id="git-main">
+  <div class="head"><div class="eyebrow">PART 10 — Git & GitHub</div><h2 class="s-title">버전 관리와 <span class="clay">협업의 기본</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="branch" style="width:15px;height:15px"></span>Git — 변경 이력 기록 도구</div>
+      <div class="frame clay panel"><p>워드에서 "보고서_v1·최종·진짜최종…"으로 관리해본 적 있죠? <strong>Git은 이걸 자동으로</strong> 해줍니다.</p>
+        <ul class="blist" style="margin-top:12px">
+          <li><span class="bic" data-ic="check"></span><div>언제 무엇을 바꿨는지 <strong>전부 기록</strong></div></li>
+          <li><span class="bic" data-ic="loop"></span><div>이전 버전으로 <strong>즉시 복구</strong></div></li>
+          <li><span class="bic" data-ic="users"></span><div>팀원과 <strong>동시 작업</strong> 가능</div></li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="github" style="width:15px;height:15px"></span>GitHub — 코드의 구글 드라이브</div>
+      <div class="frame panel" style="margin-bottom:14px"><p>Git으로 관리하는 코드를 <strong>인터넷에 저장</strong>하는 서비스.</p>
+        <ul class="blist" style="margin-top:12px">
+          <li><span class="bic" data-ic="folder"></span><div><strong>저장소(Repository/레포)</strong> — 프로젝트 폴더</div></li>
+          <li><span class="bic" data-ic="globe"></span><div><strong>배포(Deploy)</strong> — 만든 앱을 인터넷에 공개</div></li>
+          <li><span class="bic" data-ic="share"></span><div>팀원과 코드 공유·협업</div></li>
+        </ul>
+      </div>
+      <div class="warn"><strong>Windows는 Git을 별도 설치!</strong> <code style="font-family:monospace;color:var(--ink)">winget install Git.Git</code> 또는 git-scm.com. 설치 시 <strong style="color:var(--ink)">Git Bash · Git Credential Manager</strong>가 함께 포함됩니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PART 11 : 실전 프로젝트 (캡스톤) ===== -->
+<!-- PART 11 COVER -->
+<div class="slide center" id="cap-cover">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">PART 11 · 실전 프로젝트</div>
+    <h1 class="s-title" style="font-size:clamp(38px,5.4vw,66px)"><span class="clay">마케팅 대행사</span> 랜딩페이지 만들기</h1>
+    <p class="s-sub" style="max-width:600px;margin:18px auto 0">문서 → 기획 → 이미지 → 디자인 → 코드 → 배포<br>지금까지 배운 도구를 모두 엮어 <strong style="color:var(--ink)">실제 웹사이트 하나</strong>를 처음부터 끝까지 완성합니다</p>
+  </div>
+</div>
+
+<!-- PART 11 OVERVIEW -->
+<div class="slide" id="cap-flow">
+  <div class="head"><div class="eyebrow">PART 11 — 전체 흐름</div><h2 class="s-title">하나의 <span class="clay">파이프라인</span>으로</h2></div>
+  <div class="body">
+    <div class="frame" style="padding:8px 6px;margin-bottom:26px">
+      <div class="pipe">
+        <div class="step"><div class="si" data-ic="doc"></div><div class="st">Claude Chat</div><div class="sd">문서 · 기획안</div></div>
+        <div class="sep">›</div>
+        <div class="step"><div class="si" data-ic="image"></div><div class="st">Gemini · GPT</div><div class="sd">이미지 생성</div></div>
+        <div class="sep">›</div>
+        <div class="step"><div class="si" data-ic="palette"></div><div class="st">Claude Design</div><div class="sd">랜딩 구성</div></div>
+        <div class="sep">›</div>
+        <div class="step"><div class="si" data-ic="terminal"></div><div class="st">Claude Code</div><div class="sd">RAG 챗봇</div></div>
+        <div class="sep">›</div>
+        <div class="step"><div class="si" data-ic="github"></div><div class="st">GitHub</div><div class="sd">버전 관리 · 푸시</div></div>
+        <div class="sep">›</div>
+        <div class="step"><div class="si" data-ic="rocket"></div><div class="st">Vercel</div><div class="sd">최종 배포</div></div>
+      </div>
+    </div>
+    <div class="grid g2" style="gap:24px 40px;align-items:start">
+      <div>
+        <div class="clabel clay"><span class="ic" data-ic="target" style="width:15px;height:15px"></span>최종 결과물</div>
+        <div class="frame clay panel"><p>회사 문서를 학습한 <strong>RAG 챗봇이 우측 하단에 붙은</strong> 마케팅 대행사 랜딩페이지를 <strong>실제 URL로 배포</strong>합니다.</p></div>
+      </div>
+      <div>
+        <div class="clabel"><span class="ic" data-ic="layers" style="width:15px;height:15px"></span>거쳐가는 산출물</div>
+        <div class="tagrow">
+          <span class="tag">.md 문서 3종</span><span class="tag">landing-plan.md</span><span class="tag">DESIGN.md</span>
+          <span class="tag">이미지 세트</span><span class="tag">랜딩페이지 코드</span><span class="tag clay">vercel.app URL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 1 -->
+<div class="slide" id="cap-s1">
+  <div class="head"><div class="eyebrow">PART 11 — STEP 1 · Claude Chat</div><h2 class="s-title">회사 문서를 <span class="clay">.md 파일</span>로</h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="doc" style="width:15px;height:15px"></span>만들 문서 3종</div>
+      <div class="frame clay panel"><p>가상의 마케팅 대행사를 하나 설정하고, 핵심 문서를 <strong>각각 마크다운 파일</strong>로 만듭니다.</p>
+        <ul class="blist" style="margin-top:12px">
+          <li><span class="bic" data-ic="book"></span><div><strong>회사 소개서</strong> — company-profile.md</div></li>
+          <li><span class="bic" data-ic="shield"></span><div><strong>서비스 · 정책</strong> — policy.md</div></li>
+          <li><span class="bic" data-ic="chat"></span><div><strong>FAQ</strong> — faq.md</div></li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="clabel"><span class="ic" data-ic="pen" style="width:15px;height:15px"></span>예시 프롬프트</div>
+      <div class="code" style="margin-bottom:14px"><span class="cm"># Claude Chat</span>
+가상의 마케팅 대행사 <span class="st">'브랜드브릿지'</span>를 설정하고
+<span class="kw">회사소개서 / 서비스·정책 / FAQ</span>를
+각각 별도 <span class="kw">.md</span> 파일로 만들어줘.
+톤은 전문적이고 신뢰감 있게.</div>
+      <div class="note">왜 <strong>.md</strong>일까요? 가볍고 구조적이라 이후 <strong>기획 · 디자인 · RAG 챗봇</strong>의 지식 소스로 그대로 재사용됩니다. 특히 FAQ는 <strong>STEP 6 챗봇의 학습 데이터</strong>가 되니 질문–답변을 풍부하게.</div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="slide" id="cap-s2">
+  <div class="head"><div class="eyebrow">PART 11 — STEP 2 · Claude Chat</div><h2 class="s-title">레퍼런스 잡고 <span class="clay">기획안</span> 작성</h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="palette" style="width:15px;height:15px"></span>getdesign.md 레퍼런스</div>
+      <div class="frame clay panel"><p><strong>getdesign.md</strong> = 유명 사이트의 디자인 시스템을 <strong>DESIGN.md</strong>(컬러·타이포·컴포넌트 명세)로 정리한 갤러리.</p>
+        <ul class="blist" style="margin-top:12px">
+          <li><span class="bic" data-ic="target"></span><div>마음에 드는 <strong>스타일 하나 선택</strong></div></li>
+          <li><span class="bic" data-ic="doc"></span><div>해당 <strong>DESIGN.md 확보</strong> (Google Stitch가 제안한 포맷)</div></li>
+        </ul>
+      </div>
+      <div class="note" style="margin-top:14px">이 DESIGN.md는 <strong>STEP 4 디자인 빌드</strong>까지 그대로 가져갑니다.</div>
+    </div>
+    <div>
+      <div class="clabel"><span class="ic" data-ic="doc" style="width:15px;height:15px"></span>기획안에 담을 것</div>
+      <div class="frame panel"><p>1단계 회사 문서 + 레퍼런스를 근거로 <strong>landing-plan.md</strong>를 작성합니다.</p>
+        <ul class="blist" style="margin-top:12px">
+          <li><span class="bic" data-ic="layers"></span><div><strong>섹션 구성</strong> — Hero · 소개 · 서비스 · 후기 · CTA</div></li>
+          <li><span class="bic" data-ic="pen"></span><div><strong>핵심 카피</strong>와 메시지</div></li>
+          <li><span class="bic" data-ic="sparkle"></span><div><strong>컬러 · 타이포 · 톤</strong> (레퍼런스 기반)</div></li>
+          <li><span class="bic" data-ic="image"></span><div><strong>필요한 이미지 목록</strong> → STEP 3로 연결</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="slide" id="cap-s3">
+  <div class="head"><div class="eyebrow">PART 11 — STEP 3 · Gemini · GPT</div><h2 class="s-title">첨부용 <span class="clay">이미지</span> 생성</h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="image" style="width:15px;height:15px"></span>무엇을 만드나</div>
+      <div class="frame clay panel">
+        <ul class="blist">
+          <li><span class="bic" data-ic="sparkle"></span><div><strong>히어로 비주얼</strong> — 첫 화면 메인 이미지</div></li>
+          <li><span class="bic" data-ic="tools"></span><div><strong>서비스 일러스트 · 아이콘</strong></div></li>
+          <li><span class="bic" data-ic="users"></span><div><strong>팀 · 오피스 무드컷</strong></div></li>
+        </ul>
+      </div>
+      <div class="note" style="margin-top:14px"><strong>왜 두 모델?</strong> Gemini와 GPT로 각각 만들어 <strong>비교 후 베스트를 선택</strong>합니다. 사진풍 · 일러스트 등 모델마다 강점이 다릅니다.</div>
+    </div>
+    <div>
+      <div class="clabel"><span class="ic" data-ic="sparkle" style="width:15px;height:15px"></span>프롬프트 팁</div>
+      <div class="frame panel">
+        <ul class="blist">
+          <li><span class="bic" data-ic="palette"></span><div>2단계 기획안의 <strong>컬러 · 톤을 반영</strong></div></li>
+          <li><span class="bic" data-ic="window"></span><div>섹션에 맞춰 <strong>가로/세로 비율</strong> 지정</div></li>
+          <li><span class="bic" data-ic="loop"></span><div><strong>스타일 키워드 고정</strong>으로 일관성 유지</div></li>
+        </ul>
+      </div>
+      <div class="warn" style="margin-top:14px"><strong>저작권:</strong> 생성 이미지라 부담이 적지만, <strong>실존 로고 · 인물</strong> 묘사는 피하세요.</div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="slide" id="cap-s4">
+  <div class="head"><div class="eyebrow">PART 11 — STEP 4 · Claude Design</div><h2 class="s-title"><span class="clay">Claude Design</span>으로 랜딩 구성</h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="folder" style="width:15px;height:15px"></span>캔버스에 넣을 입력</div>
+      <div class="frame clay panel"><p>앞서 만든 산출물을 모두 첨부하고 <strong>대화로 페이지를 생성</strong>합니다.</p>
+        <ul class="blist" style="margin-top:12px">
+          <li><span class="bic" data-ic="doc"></span><div>1단계 <strong>회사 .md</strong></div></li>
+          <li><span class="bic" data-ic="layers"></span><div>2단계 <strong>기획안 + DESIGN.md</strong></div></li>
+          <li><span class="bic" data-ic="image"></span><div>3단계 <strong>이미지 세트</strong></div></li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="clabel"><span class="ic" data-ic="loop" style="width:15px;height:15px"></span>대화로 다듬기</div>
+      <div class="code" style="margin-bottom:14px"><span class="cm"># Claude Design</span>
+이 기획안과 <span class="kw">DESIGN.md</span>, 이미지로
+<span class="st">반응형 랜딩페이지</span>를 만들어줘.</div>
+      <div class="frame panel">
+        <ul class="blist">
+          <li><span class="bic" data-ic="layers"></span><div>섹션 순서 · 여백 조정</div></li>
+          <li><span class="bic" data-ic="pen"></span><div>카피 교체 · 톤 조정</div></li>
+          <li><span class="bic" data-ic="window"></span><div>모바일 <strong>반응형</strong> 확인</div></li>
+        </ul>
+      </div>
+      <div class="note" style="margin-top:14px">결과물은 실제 <strong>HTML / CSS</strong>. 다음 단계에서 코드로 이어받습니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 5 -->
+<div class="slide" id="cap-s5">
+  <div class="head"><div class="eyebrow">PART 11 — STEP 5 · Design → Code</div><h2 class="s-title"><span class="clay">Zip 내보내기</span> → Claude Code</h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="pkg" style="width:15px;height:15px"></span>넘기는 과정</div>
+      <div class="frame clay panel">
+        <div class="flow">
+          <div class="item"><div class="n clay">1</div><div class="tx"><strong>Design에서 Zip 내보내기</strong><span>완성된 랜딩페이지를 통째로 다운로드</span></div></div>
+          <div class="item"><div class="n clay">2</div><div class="tx"><strong>압축 해제</strong><span>로컬 폴더에 풀기</span></div></div>
+          <div class="item"><div class="n clay">3</div><div class="tx"><strong>Claude Code 작업 폴더로 열기</strong><span>그 폴더를 작업 폴더로 지정</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="clabel"><span class="ic" data-ic="terminal" style="width:15px;height:15px"></span>코드 작업 시작</div>
+      <div class="frame panel"><p><strong>"이 프로젝트 구조를 파악하고 정리해줘"</strong></p>
+        <ul class="blist" style="margin-top:12px">
+          <li><span class="bic" data-ic="code"></span><div>컴포넌트 분리 · 폴더 정돈</div></li>
+          <li><span class="bic" data-ic="robot"></span><div>다음 기능(<strong>챗봇</strong>) 추가 준비</div></li>
+        </ul>
+      </div>
+      <div class="note" style="margin-top:14px"><strong>GUI(디자인) → CLI(코드)</strong>로 전환되는 지점. PART 8~10에서 배운 배경지식이 바로 여기서 쓰입니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 6 -->
+<div class="slide" id="cap-s6">
+  <div class="head"><div class="eyebrow">PART 11 — STEP 6 · Claude Code</div><h2 class="s-title">우측 하단 <span class="clay">RAG 챗봇</span> 구현</h2></div>
+  <div class="body">
+    <div class="clabel clay" style="justify-content:center"><span class="ic" data-ic="loop" style="width:15px;height:15px"></span>RAG 동작 — 회사 문서를 근거로 답하기</div>
+    <div class="frame" style="padding:6px 4px;margin-bottom:22px">
+      <div class="pipe">
+        <div class="step"><div class="si" data-ic="scroll"></div><div class="st">청크 분할</div><div class="sd">.md 문서 쪼개기</div></div>
+        <div class="sep">›</div>
+        <div class="step"><div class="si" data-ic="sparkle"></div><div class="st">임베딩</div><div class="sd">OpenAI</div></div>
+        <div class="sep">›</div>
+        <div class="step"><div class="si" data-ic="database"></div><div class="st">저장</div><div class="sd">Supabase pgvector</div></div>
+        <div class="sep">›</div>
+        <div class="step"><div class="si" data-ic="target"></div><div class="st">유사 검색</div><div class="sd">질문과 가까운 청크</div></div>
+        <div class="sep">›</div>
+        <div class="step"><div class="si" data-ic="chat"></div><div class="st">GPT 답변</div><div class="sd">근거 기반 응답</div></div>
+      </div>
+    </div>
+    <div class="grid g2" style="gap:20px 40px;align-items:start">
+      <div>
+        <div class="clabel"><span class="ic" data-ic="server" style="width:15px;height:15px"></span>스택</div>
+        <div class="frame panel">
+          <ul class="blist">
+            <li><span class="bic" data-ic="key"></span><div><strong>OpenAI GPT API</strong> — 임베딩 + 답변 생성</div></li>
+            <li><span class="bic" data-ic="database"></span><div><strong>Supabase</strong> — pgvector 벡터 DB 저장·검색</div></li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="clabel"><span class="ic" data-ic="gear" style="width:15px;height:15px"></span>구현 포인트</div>
+        <div class="frame panel">
+          <ul class="blist">
+            <li><span class="bic" data-ic="window"></span><div>우측 하단 <strong>floating 위젯</strong> UI</div></li>
+            <li><span class="bic" data-ic="lock"></span><div>API 키는 <strong>.env · /api 라우트</strong>로 보호</div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:16px">회사 문서를 검색해 컨텍스트로 주입하는 이 구조가 바로 <strong>PART 4 컨텍스트 엔지니어링</strong>의 실전 적용입니다.</div>
+  </div>
+</div>
+
+<!-- RAG 개념 정리 -->
+<div class="slide" id="cap-rag">
+  <div class="head"><div class="eyebrow">PART 11 — 개념 정리</div><h2 class="s-title"><span class="clay">RAG</span>란 무엇인가</h2></div>
+  <div class="body">
+    <div class="clabel"><span class="ic" data-ic="book" style="width:15px;height:15px"></span>Retrieval-Augmented Generation · 검색 증강 생성</div>
+    <div class="pipe" style="margin-bottom:20px">
+      <div class="step"><div class="si" data-ic="chat"></div><div class="st">질문</div><div class="sd">"환불 정책 알려줘"</div></div>
+      <div class="sep">›</div>
+      <div class="step"><div class="si" data-ic="database"></div><div class="st">문서 검색</div><div class="sd">관련 부분 retrieval</div></div>
+      <div class="sep">›</div>
+      <div class="step"><div class="si" data-ic="layers"></div><div class="st">컨텍스트 결합</div><div class="sd">검색 결과 + 질문</div></div>
+      <div class="sep">›</div>
+      <div class="step"><div class="si" data-ic="sparkle"></div><div class="st">근거 기반 답변</div><div class="sd">generation</div></div>
+    </div>
+    <div class="grid g2" style="align-items:start">
+      <div>
+        <div class="clabel clay"><span class="ic" data-ic="alert" style="width:15px;height:15px"></span>왜 필요한가?</div>
+        <ul class="blist">
+          <li><span class="bic" data-ic="cpu"></span><div>LLM은 <strong>학습하지 않은 최신·사내 정보</strong>를 모릅니다</div></li>
+          <li><span class="bic" data-ic="alert"></span><div>모르면 그럴듯하게 <strong>지어냅니다</strong> — 환각(hallucination)</div></li>
+          <li><span class="bic" data-ic="check"></span><div>신뢰할 문서에서 <strong>근거를 찾아</strong> 정확도↑ · 출처 제시</div></li>
+        </ul>
+      </div>
+      <div>
+        <div class="clabel"><span class="ic" data-ic="robot" style="width:15px;height:15px"></span>이 프로젝트에선</div>
+        <div class="frame clay panel">
+          <p style="margin:0"><strong>단골마케팅 회사 문서(.md)</strong>를 검색 대상으로 삼아 <strong>"우리 회사 전용" 챗봇</strong>이 완성됩니다. 문서만 교체하면 어떤 도메인에도 그대로 적용돼요.</p>
+        </div>
+        <div class="note" style="margin-top:12px">문서가 작으면 <strong>통째로 주입</strong>, 크고 많으면 <strong>벡터 검색</strong> — 둘 다 RAG의 형태입니다.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 7 · GitHub -->
+<div class="slide" id="cap-git">
+  <div class="head"><div class="eyebrow">PART 11 — STEP 7 · GitHub CLI</div><h2 class="s-title"><span class="clay">GitHub</span>에 먼저 올리기</h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="github" style="width:15px;height:15px"></span>왜 배포 전에?</div>
+      <div class="frame clay panel">
+        <ul class="blist">
+          <li><span class="bic" data-ic="branch"></span><div>코드를 <strong>원격 저장소에 안전하게 보관</strong> (버전 관리)</div></li>
+          <li><span class="bic" data-ic="rocket"></span><div>Vercel이 <strong>이 저장소를 가져다 배포</strong> (다음 STEP)</div></li>
+          <li><span class="bic" data-ic="loop"></span><div>이후 <code style="font-family:monospace;color:var(--clay)">git push</code>만으로 <strong>자동 재배포</strong></div></li>
+        </ul>
+      </div>
+      <div class="note" style="margin-top:14px"><strong>PART 10 Git &amp; GitHub</strong>에서 배운 개념을 실제로 적용하는 지점입니다.</div>
+    </div>
+    <div>
+      <div class="clabel"><span class="ic" data-ic="terminal" style="width:15px;height:15px"></span>GitHub CLI(gh)로 한 번에</div>
+      <div class="code" style="margin-bottom:14px"><span class="cm"># 1. GitHub 로그인 (최초 1회)</span>
+<span class="cmd">gh auth login</span>
+
+<span class="cm"># 2. 변경사항 커밋</span>
+<span class="cmd">git add .</span>
+<span class="cmd">git commit</span> -m <span class="st">"feat: 랜딩페이지 + RAG 챗봇"</span>
+
+<span class="cm"># 3. 저장소 생성 + 연결 + 푸시 (한 번에)</span>
+<span class="cmd">gh repo create</span> dangol-landing \
+  --public --source=. --push</div>
+      <div class="note"><strong>gh</strong> = GitHub 공식 CLI. 웹사이트를 안 거치고 <strong>터미널에서 저장소 생성·연결·푸시</strong>까지 한 번에 끝냅니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 8 -->
+<div class="slide" id="cap-s7">
+  <div class="head"><div class="eyebrow">PART 11 — STEP 8 · Vercel</div><h2 class="s-title"><span class="clay">Vercel</span>로 최종 배포</h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="rocket" style="width:15px;height:15px"></span>배포 흐름</div>
+      <div class="frame clay panel">
+        <div class="flow">
+          <div class="item"><div class="n clay">1</div><div class="tx"><strong>GitHub 저장소 연결</strong><span>앞 STEP의 repo를 import</span></div></div>
+          <div class="item"><div class="n clay">2</div><div class="tx"><strong>환경변수 설정</strong><span>OpenAI · Supabase 키 등록</span></div></div>
+          <div class="item"><div class="n clay">3</div><div class="tx"><strong>Deploy</strong><span>*.vercel.app URL 발급</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="clabel"><span class="ic" data-ic="globe" style="width:15px;height:15px"></span>핵심 포인트</div>
+      <div class="frame panel">
+        <ul class="blist">
+          <li><span class="bic" data-ic="loop"></span><div><code style="font-family:monospace;color:var(--clay)">git push</code>만 하면 <strong>자동 재배포</strong> (CI/CD)</div></li>
+          <li><span class="bic" data-ic="lock"></span><div>키는 <strong>Vercel 대시보드</strong>에 — 코드 하드코딩 금지</div></li>
+          <li><span class="bic" data-ic="globe"></span><div><strong>커스텀 도메인</strong> 연결 가능</div></li>
+        </ul>
+      </div>
+      <div class="note" style="margin-top:14px">이제 누구나 접속할 수 있는 <strong>실제 URL</strong>로 공개됩니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PART 11 RECAP -->
+<div class="slide" id="cap-recap">
+  <div class="head"><div class="eyebrow">PART 11 — 완성</div><h2 class="s-title">도구를 <span class="clay">하나의 흐름</span>으로</h2></div>
+  <div class="body">
+    <div class="frame panel" style="padding:8px 26px;margin-bottom:18px">
+      <table class="tbl">
+        <thead><tr><th>단계</th><th>도구</th><th>산출물</th></tr></thead>
+        <tbody>
+          <tr><td><strong>문서 · 기획</strong></td><td>Claude Chat</td><td>.md 문서 3종 · landing-plan.md</td></tr>
+          <tr><td><strong>이미지</strong></td><td>Gemini · GPT</td><td>히어로 · 서비스 이미지 세트</td></tr>
+          <tr><td><strong>랜딩 구성</strong></td><td>Claude Design</td><td>랜딩페이지 (HTML/CSS)</td></tr>
+          <tr><td><strong>RAG 챗봇</strong></td><td>Claude Code + OpenAI · Supabase</td><td>문서 기반 챗봇 위젯</td></tr>
+          <tr><td><strong>버전 관리</strong></td><td>GitHub (gh CLI)</td><td>원격 저장소 · 푸시</td></tr>
+          <tr><td><strong>배포</strong></td><td>Vercel</td><td>공개 vercel.app URL</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><strong>배운 것이 실전으로:</strong> 이 프로젝트 하나에 <strong>PART 4 컨텍스트 엔지니어링</strong>(RAG) · <strong>PART 10 Git &amp; GitHub</strong>(배포) · 커넥터 · 스킬의 사고방식이 모두 연결됩니다.</div>
+  </div>
+</div>
+
+
+<!-- CLOSING -->
+<div class="slide center" id="s-end">
+  <div class="head" style="margin-bottom:0">
+    <div class="eyebrow">정리</div>
+    <h1 class="s-title" style="font-size:clamp(36px,5.2vw,58px)">대화가 아니라 <span class="clay">위임</span></h1>
+    <p class="s-sub" style="max-width:560px;margin:18px auto 0">파일·도구에 연결하고, 스킬로 내 방식을 가르치고,<br>컨텍스트를 설계해 일을 맡기세요.<br>그리고 방금 — 문서부터 <strong style="color:var(--ink)">배포까지</strong> 실제 프로젝트 하나를 직접 완성했습니다.</p>
+  </div>
+  <div class="tagrow" style="justify-content:center;margin-top:30px;max-width:760px">
+    <span class="tag clay">로컬 파일</span><span class="tag clay">커넥터</span><span class="tag clay">스킬</span>
+    <span class="tag clay">컨텍스트 엔지니어링</span><span class="tag clay">컴퓨터·개발 기초</span><span class="tag clay">Git &amp; GitHub</span><span class="tag clay">실전 프로젝트</span>
+  </div>
+</div>
+
+<!-- ===== APPENDIX ===== -->
+<!-- APPENDIX 1 — 좋은 프롬프트 -->
+<div class="slide" id="apx-goodprompt">
+  <div class="head" style="margin-bottom:14px"><div class="eyebrow plain">APPENDIX 1 · 좋은 프롬프트</div><h2 class="s-title">좋은 프롬프트는 <span class="clay">무엇이 다른가</span></h2></div>
+  <div class="body grid g2" style="align-items:start">
+    <div>
+      <div class="clabel"><span class="ic" data-ic="pen" style="width:15px;height:15px"></span>예시 — 재무 컨설팅 프롬프트</div>
+      <div class="frame panel" style="font-size:12.5px;line-height:1.6">
+        <div style="color:var(--clay);font-weight:700">[프로필]</div>
+        출생 1990 · 학사 / AI 활용 교육·AX 컨설팅(AI BRIDGE)<br>경력 대기업 사업기획 4년 + 스타트업 운영 5년 · 유튜브 "진용성 jys"(구독 7,000+)
+        <div style="color:var(--clay);font-weight:700;margin-top:9px">[재무 현황]</div>
+        월 소득 400만 · 가용 현금 1억 · 월 고정지출 200만 · 부채 없음
+        <div style="color:var(--clay);font-weight:700;margin-top:9px">[목표]</div>
+        3년 내 · 월 소득 2,000만 · 금융자산 10억 · 리스크 중간(원금 손실 20%까지)
+        <div style="color:var(--clay);font-weight:700;margin-top:9px">[출력 형태]</div>
+        ① 수익 극대화 전략(로드맵 도식) ② 자산 증식(포트폴리오 도식) ③ 단계별 실행 계획(타임라인)
+      </div>
+    </div>
+    <div>
+      <div class="clabel clay"><span class="ic" data-ic="check" style="width:15px;height:15px"></span>좋은 프롬프트의 4요소</div>
+      <ul class="blist">
+        <li><span class="bic" data-ic="users"></span><div><strong>맥락 (Who)</strong> — [프로필]로 '누가' 묻는지 제공 → 눈높이·전문성 맞춤</div></li>
+        <li><span class="bic" data-ic="chart"></span><div><strong>구체적 데이터</strong> — [재무 현황]을 숫자로 → 추측 대신 정확한 분석</div></li>
+        <li><span class="bic" data-ic="target"></span><div><strong>명확한 목표 + 제약</strong> — 기간·수치·리스크 허용범위까지 명시</div></li>
+        <li><span class="bic" data-ic="layers"></span><div><strong>출력 형식 지정</strong> — [출력 형태]로 결과물 구조를 못박기</div></li>
+      </ul>
+      <div class="note" style="margin-top:6px">막연한 "재테크 알려줘"와 달리, <strong>맥락·데이터·목표·형식</strong>을 갖추면 답변의 질이 확 올라갑니다.</div>
+    </div>
+  </div>
+</div>
+<!-- APPENDIX 2 — 전역 지침 -->
+<div class="slide" id="apx-global">
+  <div class="head" style="margin-bottom:10px"><div class="eyebrow plain">APPENDIX 2 · 전역 지침</div><h2 class="s-title"><span class="clay">전역 지침</span> 작성 요령</h2></div>
+  <div class="body">
+    <p style="text-align:center;font-size:13.5px;color:var(--body);margin-bottom:14px"><strong style="color:var(--ink)">Claude.ai → 설정 → 프로필</strong>에 등록하는 전역 지침 · 모든 대화에 공통 적용 <span style="color:var(--muted)">— 매번 역할·말투·전문성을 설명할 필요가 없습니다</span></p>
+    <div class="grid g2" style="gap:14px 20px;align-items:start">
+      <div>
+        <div class="clabel"><span class="ic" data-ic="users" style="width:15px;height:15px"></span>사용자 프로필 — Claude가 나를 알게</div>
+        <div class="code" style="font-size:11px;line-height:1.55"><span class="kw"># 사용자 프로필</span>
+<span class="kw">## 기본 정보</span>
+- 이름: 진용성 (1990년생)
+- 소속: AI BRIDGE (AI 교육·컨설팅·개발)
+- 직무: AI 활용 교육 강사 · AX 컨설턴트
+- 경력: 대기업 사업기획 4년 + 스타트업 5년
+- 학력: 학사
+
+<span class="kw">## 전문 분야 및 활동</span>
+- Claude, ChatGPT 등 AI 도구 실무 활용 교육 전문가
+- 기업 강의: 앨리스랩(Claude Code), 대우건설(Claude 디자인),
+  한국부동산마케팅협회(Claude 기초) 등 오프라인 특강 다수
+- 유튜브 "진용성 jys" 채널 운영 (구독자 7,000+)</div>
+      </div>
+      <div>
+        <div class="clabel clay"><span class="ic" data-ic="gear" style="width:15px;height:15px"></span>기본 동작 지침 — 행동 방식 세팅</div>
+        <div class="code" style="font-size:11px;line-height:1.5"><span class="kw"># 기본 동작 지침</span>
+<span class="kw">## 1. 전문성 수준</span>
+- AI 도구·프롬프트 엔지니어링에 익숙한 중급~고급 사용자
+- 기초 개념은 생략, 실무·전략·심화 관점으로 바로 답변
+- 단, 모르는 분야(개발/금융/법률)는 친절하게 설명
+
+<span class="kw">## 2. 답변 형식</span>
+- 기본 언어: 한국어 · 핵심 먼저, 근거·부연은 나중
+- 도식·표·리스트를 적극 활용해 한눈에 파악되도록
+
+<span class="kw">## 3. 말투 (상황별 구분)</span>
+<span class="cm">### 💬 일반 대화·아이디어 탐색</span>
+- "~했또", "~인거또" 같은 귀여운 말투 🐣 / "ㅜㅜ", "^0^" ✨
+<span class="cm">### 📄 문서·보고서·강의 자료·코드</span>
+- 전문적이고 깔끔한 말투로 전환, 이모지 제외
+
+<span class="kw">## 4. 맥락 활용</span>
+- 강의 콘텐츠·유튜브 스크립트·커리큘럼 설계 요청 多
+- 비즈니스 기획·수익화·퍼스널 브랜딩 질문 多
+- 내 직업과 연결해 바로 쓸 수 있는 답변 우선</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APPENDIX 3 — 프로젝트 지침 -->
+<div class="slide" id="apx-project">
+  <div class="head" style="margin-bottom:10px"><div class="eyebrow plain">APPENDIX 3 · 프로젝트 지침</div><h2 class="s-title">프로젝트 전용 <span class="clay">지침</span></h2></div>
+  <div class="body">
+    <p style="text-align:center;font-size:13.5px;color:var(--body);margin-bottom:14px"><strong style="color:var(--ink)">Claude.ai → 프로젝트 → 지침</strong>에 등록하는 시스템 프롬프트 <span style="color:var(--muted)">— 이 슬라이드 자체가 '지침을 어떻게 구성하는가'의 실제 예시입니다</span></p>
+    <div class="grid g2" style="gap:14px 20px;align-items:start">
+      <div>
+        <div class="clabel"><span class="ic" data-ic="robot" style="width:15px;height:15px"></span>프로젝트 개요 · Claude 역할 정의</div>
+        <div class="code" style="font-size:11px;line-height:1.5"><span class="kw"># 🤖 고객응대 자동화 실습 어시스턴트</span>
+
+<span class="kw">## 프로젝트 개요</span>
+"AI로 완성하는 고객응대 자동화 실무 캠프" 수강생 전용
+- 강의일: 2026년 5월 22일(금) 09:00~18:00
+- 장소: 엘리스랩 서울센터
+- 진행: 진용성 강사 · AI BRIDGE
+
+<span class="kw">## Claude의 역할</span>
+1. 시나리오 설계 파트너 — 고객응대 시나리오 초안
+2. 프롬프트 리뷰어 — 수강생 프롬프트 개선 피드백
+3. 자동화 구현 가이드 — Step별 과제·코드/흐름 설명
+4. VOC 분석 도우미 — 문의 분류·요약·인사이트 추출
+
+<span class="kw">## 답변 규칙</span>
+- 언어: 한국어 / 핵심 먼저 → 단계·예시 순서
+- 표·리스트 적극 활용, 바로 쓸 프롬프트·코드·템플릿
+- 실습에 방해 안 되도록 간결하게</div>
+      </div>
+      <div>
+        <div class="clabel clay"><span class="ic" data-ic="scroll" style="width:15px;height:15px"></span>단계별 활용 가이드 · 시작 예시</div>
+        <div class="code" style="font-size:11px;line-height:1.5"><span class="kw">## 커리큘럼 단계별 활용 가이드</span>
+<span class="kw">### Step 1 | 개념 이해·사례 분석</span>
+- "우리 업종 고객응대 자동화 사례 알려줘"
+- "생성형 AI 자동화의 한계·주의사항은?"
+<span class="kw">### Step 2 | 시나리오 설계·프롬프트 작성</span>
+- "브랜드 톤은 [OOO]야. 환불 문의 응답 프롬프트 만들어줘"
+- "작성한 프롬프트 검토해줘 → [프롬프트]"
+<span class="kw">### Step 3 | 데이터 연동·문의 유형 분류</span>
+- "이 문의들 유형별 분류 + 자동 응답 초안 → [데이터]"
+<span class="kw">### Step 4 | Claude Code 자동화 구현</span>
+- "담당자 전달 자동화 흐름을 Claude Code로 구현"
+- "VOC 요약·분석 프롬프트 구조 짜줘"
+<span class="kw">### Step 5 | 전체 프로토타입 구축</span>
+- "인입→응답→전달→분석 흐름을 다이어그램으로"
+- "우리 회사 적용 시 리스크·해결책은?"
+
+<span class="cm">---</span>
+<span class="kw">## 실습 시작 예시 문장</span>
+&gt; "나는 [업종/직무]에서 일해. 오늘 Step [N] 실습 중인데,
+&gt;  [상황]에 맞는 [결과물]을 만들어줘."</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APPENDIX 4 — 챗봇 구현 프롬프트 -->
+<div class="slide" id="apx-prompt">
+  <div class="head" style="margin-bottom:14px"><div class="eyebrow plain">APPENDIX 4 · 실습 보조 자료</div><h2 class="s-title">랜딩페이지 <span class="clay">챗봇 구현 프롬프트</span></h2></div>
+  <div class="body">
+    <p style="text-align:center;font-size:14px;color:var(--body);margin-bottom:14px"><strong style="color:var(--ink)">docs/</strong> 폴더에 참고 문서를 넣고 <strong style="color:var(--ink)">Claude Code 작업 폴더</strong>에서 아래 프롬프트를 붙여넣으세요. <span style="color:var(--muted)">— 문서가 작아 벡터 DB 없이 전체 주입 (PART 4 · STEP 6)</span></p>
+    <div class="grid g2" style="gap:16px 20px;align-items:start">
+      <div class="code" style="font-size:12px;line-height:1.62"><span class="cm"># 랜딩페이지 챗봇 만들기</span>
+이 프로젝트 우측 하단에 floating 챗봇 위젯을 추가해줘.
+
+<span class="kw">[아키텍처]</span>
+- 프론트: <span class="cmd">chatbot.js</span> (순수 JS, 프레임워크 없이)
+- 백엔드: <span class="cmd">server.js</span> (Node.js HTTP 서버,
+  정적 파일 + <span class="cmd">/api/chat</span> 라우트)
+
+<span class="kw">[지식 베이스]</span>
+- <span class="cmd">docs/</span> 폴더의 모든 .md 문서를 읽어서
+  시스템 프롬프트에 전체 주입
+- 벡터 DB 불필요 (문서가 작으므로)
+
+<span class="kw">[모델]</span>
+- OpenAI <span class="st">gpt-5.2-mini</span> 사용
+- API 키는 <span class="cmd">.env(OPENAI_API_KEY)</span>에서 읽기
+- 클라이언트에 키 절대 노출 금지, 서버에서만 호출
+
+<span class="kw">[배포 — Vercel 최적화]</span>
+- 추후 <span class="cmd">GitHub → Vercel</span> 배포를 전제로 구성
+- <span class="cmd">/api/chat</span>은 Vercel 서버리스 함수로 동작 (로컬은 server.js)
+- 환경변수는 Vercel 대시보드에서 주입, 키 커밋 금지
+- <span class="cmd">.gitignore</span>에 <span class="cmd">.env</span> · <span class="cmd">node_modules</span> 포함</div>
+      <div class="code" style="font-size:12px;line-height:1.62"><span class="kw">[답변 규칙 — 질문 유형별로 다르게]</span>
+- 자기소개·대화형(<span class="st">"이름이 뭐야"</span> 등):
+  챗봇 이름/역할을 자연스럽게 답변
+- 서비스·정책 질문: 주입된 문서 내용만 사용,
+  없으면 <span class="st">"무료 상담 안내"</span>
+- 무관한 질문(날씨 등):
+  <span class="st">"서비스 관련 질문만 답할 수 있어요"</span> 안내
+- 문서에 없는 정보는 절대 창작 금지
+
+<span class="kw">[대화]</span>
+- 최근 10개 메시지(5턴) 기억 유지
+- 환영 메시지: 페이지 로드 1초 후 자동 표시
+
+<span class="kw">[UI]</span>
+- 우측 하단 고정 버튼 → 클릭 시 채팅창 슬라이드 업
+- 랜딩페이지 accent 색상·Pretendard 폰트에 맞춤
+- 로딩 중 점 애니메이션, 오류 시 에러 메시지 표시
+- 모바일 반응형 (<span class="cmd">calc(100vw - 40px)</span>)</div>
+    </div>
+  </div>
+</div>
+
+<!-- APPENDIX 5 — 참고 링크 -->
+<div class="slide" id="apx-links">
+  <div class="head"><div class="eyebrow plain">APPENDIX 5 · 참고 링크</div><h2 class="s-title"><span class="clay">참고 링크</span> 모음</h2></div>
+  <div class="body grid g2" style="gap:22px 38px">
+    <div class="frame panel">
+      <div class="ttl"><span class="ic" data-ic="sparkle"></span>Claude 다운로드</div>
+      <p><a href="https://claude.com/download/" target="_blank" style="color:var(--clay);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:14.5px;word-break:break-all">claude.com/download</a></p>
+      <p style="margin-top:8px">Claude 데스크톱 · Code 설치. <strong>STEP 4~6 실습의 출발점</strong>입니다.</p>
+    </div>
+    <div class="frame panel">
+      <div class="ttl"><span class="ic" data-ic="image"></span>Higgsfield AI</div>
+      <p><a href="https://higgsfield.ai/" target="_blank" style="color:var(--clay);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:14.5px;word-break:break-all">higgsfield.ai</a></p>
+      <p style="margin-top:8px">이미지 · 영상 생성 도구. <strong>STEP 3 이미지 제작</strong>에 활용할 수 있습니다.</p>
+    </div>
+    <div class="frame panel">
+      <div class="ttl"><span class="ic" data-ic="palette"></span>getdesign.md <small style="font-weight:500;color:var(--muted)">(Nike 예시)</small></div>
+      <p><a href="https://getdesign.md/nike/design-md" target="_blank" style="color:var(--clay);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:14.5px;word-break:break-all">getdesign.md/nike/design-md</a></p>
+      <p style="margin-top:8px">사이트 디자인 시스템을 담은 <strong>DESIGN.md 레퍼런스</strong>. <strong>STEP 2 기획</strong>에 사용합니다.</p>
+    </div>
+    <div class="frame panel">
+      <div class="ttl"><span class="ic" data-ic="key"></span>OpenAI API Keys</div>
+      <p><a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--clay);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:14.5px;word-break:break-all">platform.openai.com/api-keys</a></p>
+      <p style="margin-top:8px">챗봇용 <strong>API 키 발급</strong>. <strong>STEP 6 RAG 챗봇</strong>에서 사용합니다.</p>
+    </div>
+  </div>
+</div>
+
+
+</div><!-- /deck -->
+<!-- ── NAV ── -->
+<!-- ── chapter sidebar ── -->
+<button id="menu-btn" onclick="toggleSidebar()"><span class="bars"><i></i><i></i><i></i></span>목차</button>
+<div id="sb-overlay" onclick="closeSidebar()"></div>
+<aside id="sidebar">
+  <div id="sb-head"><div class="t">Cowork <span>완전 가이드</span></div><button id="sb-close" onclick="closeSidebar()">&times;</button></div>
+  <div id="sb-list"></div>
+  <div class="sb-foot"><kbd>M</kbd> 목차 · <kbd>←</kbd><kbd>→</kbd> 이동</div>
+</aside>
+
+<div id="nav">
+  <button class="nb" id="prev">‹</button>
+  <div id="ctr"><input id="pin" type="number" min="1" value="1"><span>/</span><span id="total">36</span></div>
+  <button class="nb" id="next">›</button>
+  <div class="dots" id="dots"></div>
+</div>
+
+<script>
+/* ── icon set (monoline, stroke) ── */
+const A='stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+const ICONS={
+  folder:`<path ${A} d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>`,
+  code:`<polyline ${A} points="9 7 4 12 9 17"/><polyline ${A} points="15 7 20 12 15 17"/>`,
+  tools:`<path ${A} d="M6 18l6-6"/><path ${A} d="M14 10l4-4a2.5 2.5 0 0 0-3.5-3.5L10.5 6.5z"/><path ${A} d="M14 14l4 4"/><path ${A} d="M5 5l3 3"/>`,
+  scroll:`<path ${A} d="M6 4h9a2 2 0 0 1 2 2v11a2 2 0 0 0 2 2H8a2 2 0 0 1-2-2z"/><path ${A} d="M9 9h6M9 12.5h6"/>`,
+  loop:`<path ${A} d="M20 11a8 8 0 0 0-14-4.5M5 4v3h3"/><path ${A} d="M4 13a8 8 0 0 0 14 4.5M19 20v-3h-3"/>`,
+  cpu:`<rect ${A} x="6" y="6" width="12" height="12" rx="2"/><rect ${A} x="9.5" y="9.5" width="5" height="5" rx="1"/><path ${A} d="M9 2v2.5M15 2v2.5M9 19.5V22M15 19.5V22M2 9h2.5M2 15h2.5M19.5 9H22M19.5 15H22"/>`,
+  sparkle:`<path ${A} d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path ${A} d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>`,
+  book:`<path ${A} d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z"/><path ${A} d="M4 18a2 2 0 0 1 2-2h13"/>`,
+  gear:`<circle ${A} cx="12" cy="12" r="3.2"/><path ${A} d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/>`,
+  target:`<circle ${A} cx="12" cy="12" r="8"/><circle ${A} cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>`,
+  chat:`<path ${A} d="M21 11.5a8 8 0 0 1-11.6 7.1L4 20l1.4-5.4A8 8 0 1 1 21 11.5z"/>`,
+  robot:`<rect ${A} x="5" y="8" width="14" height="11" rx="2.5"/><path ${A} d="M12 8V4.5M12 3.5h.01"/><circle cx="9.5" cy="13" r="1.1" fill="currentColor"/><circle cx="14.5" cy="13" r="1.1" fill="currentColor"/><path ${A} d="M3 12v3M21 12v3"/>`,
+  alert:`<path ${A} d="M12 3.5l9 16H3z"/><path ${A} d="M12 10v4.5M12 17.5h.01"/>`,
+  check:`<circle ${A} cx="12" cy="12" r="9"/><path ${A} d="M8 12.5l2.6 2.6L16 9.5"/>`,
+  globe:`<circle ${A} cx="12" cy="12" r="9"/><path ${A} d="M3 12h18"/><path ${A} d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/>`,
+  users:`<circle ${A} cx="9" cy="8.5" r="3.2"/><path ${A} d="M3 19a6 6 0 0 1 12 0"/><path ${A} d="M16 5.5a3.2 3.2 0 0 1 0 6.4M21 19a6 6 0 0 0-3.5-5.4"/>`,
+  terminal:`<rect ${A} x="3" y="5" width="18" height="14" rx="2"/><path ${A} d="M7 10l3 2.5-3 2.5M13.5 15.5H17"/>`,
+  plug:`<path ${A} d="M9 7V3M15 7V3M7 7h10v3.5a5 5 0 0 1-10 0z"/><path ${A} d="M12 15.5V21"/>`,
+  doc:`<path ${A} d="M6 3h8l4 4v14H6z"/><path ${A} d="M14 3v4h4"/><path ${A} d="M9 13h6M9 16.5h6"/>`,
+  sheet:`<rect ${A} x="4" y="4" width="16" height="16" rx="2"/><path ${A} d="M4 9.5h16M4 14.5h16M9.5 4v16M14.5 4v16"/>`,
+  pen:`<path ${A} d="M16.5 4.5l3 3L8 19l-4 1 1-4z"/><path ${A} d="M14 7l3 3"/>`,
+  layers:`<path ${A} d="M12 3l9 5-9 5-9-5z"/><path ${A} d="M3 13l9 5 9-5M3 16.5l9 5 9-5"/>`,
+  puzzle:`<path ${A} d="M9 4.5a1.5 1.5 0 0 1 3 0V6h2.5a1 1 0 0 1 1 1v2.5h1.5a1.5 1.5 0 0 1 0 3H15V16a1 1 0 0 1-1 1h-2.5v1.5a1.5 1.5 0 0 1-3 0V17H6a1 1 0 0 1-1-1v-3.5H6.5a1.5 1.5 0 0 0 0-3H5V7a1 1 0 0 1 1-1h3z"/>`,
+  pin:`<path ${A} d="M12 21s-6.5-5.5-6.5-10.5A6.5 6.5 0 0 1 12 4a6.5 6.5 0 0 1 6.5 6.5C18.5 15.5 12 21 12 21z"/><circle ${A} cx="12" cy="10.5" r="2.3"/>`,
+  bolt:`<path ${A} d="M13 3L5 13h5l-1 8 8-10h-5z"/>`,
+  window:`<rect ${A} x="3" y="4" width="18" height="16" rx="2"/><path ${A} d="M3 9h18"/><circle cx="6.5" cy="6.5" r="0.8" fill="currentColor"/>`,
+  calendar:`<rect ${A} x="3" y="5" width="18" height="16" rx="2"/><path ${A} d="M3 9.5h18M8 3v4M16 3v4"/>`,
+  mail:`<rect ${A} x="3" y="5" width="18" height="14" rx="2"/><path ${A} d="M3.5 7l8.5 6 8.5-6"/>`,
+  github:`<path ${A} d="M9 19c-4 1.4-4-2-6-2.5M15 21v-3.4a3 3 0 0 0-.8-2.3c2.6-.3 5.3-1.3 5.3-5.9a4.6 4.6 0 0 0-1.2-3.1 4.3 4.3 0 0 0-.1-3.2s-1-.3-3.3 1.3a11 11 0 0 0-6 0C6.6 3.6 5.6 3.9 5.6 3.9a4.3 4.3 0 0 0-.1 3.2A4.6 4.6 0 0 0 4.3 10.2c0 4.6 2.7 5.6 5.3 5.9a3 3 0 0 0-.8 2.3V21"/>`,
+  clock:`<circle ${A} cx="12" cy="12" r="8.5"/><path ${A} d="M12 7v5l3.5 2"/>`,
+  shield:`<path ${A} d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/><path ${A} d="M9 12l2 2 4-4"/>`,
+  branch:`<circle ${A} cx="6" cy="6" r="2.5"/><circle ${A} cx="6" cy="18" r="2.5"/><circle ${A} cx="18" cy="8" r="2.5"/><path ${A} d="M6 8.5v7M8.4 7.2A6 6 0 0 1 15.5 9 6 6 0 0 1 8.5 16.8"/>`,
+  browser:`<rect ${A} x="3" y="4" width="18" height="16" rx="2"/><path ${A} d="M3 8.5h18"/><circle cx="6" cy="6.2" r="0.7" fill="currentColor"/><circle cx="8.5" cy="6.2" r="0.7" fill="currentColor"/>`,
+  chart:`<path ${A} d="M4 4v15.5a.5.5 0 0 0 .5.5H20"/><path ${A} d="M8 15l3.5-4 3 2.5L20 8"/>`,
+  share:`<circle ${A} cx="6" cy="12" r="2.5"/><circle ${A} cx="18" cy="6" r="2.5"/><circle ${A} cx="18" cy="18" r="2.5"/><path ${A} d="M8.2 11l7.6-3.6M8.2 13l7.6 3.6"/>`,
+  drive:`<path ${A} d="M8.5 4h7l5 8.7-3.5 6H7L3.5 12.7z"/><path ${A} d="M3.7 12.7h16.6M8.5 4l4.3 8.7M15.5 4l-4.3 8.7"/>`,
+  dispatch:`<path ${A} d="M4 12h6M14 12h6M12 4v6M12 14v6"/><circle ${A} cx="12" cy="12" r="2.5"/>`,
+  lock:`<rect ${A} x="5" y="10" width="14" height="10" rx="2"/><path ${A} d="M8 10V7a4 4 0 0 1 8 0v3"/>`,
+  pkg:`<path ${A} d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path ${A} d="M4 7.5l8 4.5 8-4.5M12 12v9"/>`,
+  cloud:`<path ${A} d="M7 18.5a4.2 4.2 0 0 1-.3-8.4 5.2 5.2 0 0 1 10-1.3A3.8 3.8 0 0 1 17.5 18.5z"/>`,
+  server:`<rect ${A} x="4" y="4" width="16" height="7" rx="1.6"/><rect ${A} x="4" y="13" width="16" height="7" rx="1.6"/><path ${A} d="M7.5 7.5h.01M7.5 16.5h.01M11 7.5h5M11 16.5h5"/>`,
+  key:`<circle ${A} cx="7.8" cy="8" r="3.6"/><path ${A} d="M10.2 10.4l8 8M15.5 13.5l2.3 2.3M13 16l2.2 2.2"/>`,
+  coin:`<circle ${A} cx="12" cy="12" r="8.5"/><path ${A} d="M9.5 9.5h5M9.5 14.5h5M11 7.5l-1 9M14 7.5l-1 9"/>`,
+  palette:`<path ${A} d="M12 3a9 9 0 0 0 0 18c1.3 0 2-1 2-2.2 0-1.3 1-2 2.2-2H18A3.5 3.5 0 0 0 21 13.3 9 9 0 0 0 12 3z"/><circle cx="7.7" cy="11" r="1" fill="currentColor"/><circle cx="9.7" cy="7.6" r="1" fill="currentColor"/><circle cx="14.2" cy="7.6" r="1" fill="currentColor"/><circle cx="16.4" cy="11" r="1" fill="currentColor"/>`,
+  image:`<rect ${A} x="3" y="4" width="18" height="16" rx="2"/><circle ${A} cx="8.5" cy="9.5" r="1.7"/><path ${A} d="M4 17l4.5-4.5 3 3 4-4 4.5 4.5"/>`,
+  database:`<ellipse ${A} cx="12" cy="6" rx="7" ry="3"/><path ${A} d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path ${A} d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>`,
+  rocket:`<path ${A} d="M12 3c2.8 1.8 4 4.7 4 8l-2 4h-4l-2-4c0-3.3 1.2-6.2 4-8z"/><circle ${A} cx="12" cy="9.3" r="1.6"/><path ${A} d="M8 15.5l-2 2 .4 3 2.6-2M16 15.5l2 2-.4 3-2.6-2"/>`
+};
+document.querySelectorAll('[data-ic]').forEach(el=>{
+  const k=el.getAttribute('data-ic');if(!ICONS[k])return;
+  el.innerHTML=`<svg viewBox="0 0 24 24" width="100%" height="100%">${ICONS[k]}</svg>`;
+});
+
+/* ── corner brackets ── */
+document.querySelectorAll('.frame').forEach(f=>{
+  ['tl','tr','bl','br'].forEach(p=>{const s=document.createElement('span');s.className='brk '+p;f.appendChild(s);});
+});
+
+/* ── navigation ── */
+const slides=[...document.querySelectorAll('.slide')];
+const total=slides.length;let cur=0;
+const dots=document.getElementById('dots');
+const pin=document.getElementById('pin');
+document.getElementById('total').textContent=total;
+slides.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.onclick=()=>go(i);dots.appendChild(d);});
+const dotEls=[...dots.children];
+
+function go(n){
+  if(n<0||n>=total||n===cur)return;
+  slides[cur].classList.add('exit');slides[cur].classList.remove('active');
+  const prev=cur;cur=n;
+  setTimeout(()=>slides[prev].classList.remove('exit'),420);
+  slides[cur].classList.add('active');slides[cur].scrollTop=0;
+  dotEls.forEach((d,i)=>d.classList.toggle('active',i===cur));
+  pin.value=cur+1;
+  document.getElementById('progress').style.width=((cur+1)/total*100)+'%';
+  if(window.__sbReady)updateSidebar();
+}
+slides[0].classList.add('active');dotEls[0].classList.add('active');
+document.getElementById('progress').style.width=(1/total*100)+'%';
+
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+pin.addEventListener('change',()=>{let v=parseInt(pin.value)-1;if(!isNaN(v))go(Math.max(0,Math.min(total-1,v)));});
+document.addEventListener('keydown',e=>{
+  if(e.target===pin)return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();go(cur+1);}
+  if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1);}
+  if(e.key==='Home')go(0);if(e.key==='End')go(total-1);
+});
+/* ── chapter sidebar logic ── */
+const PARTS=[
+  {n:'PART 1', t:'AI 기초 개념',        id:'ai-cover'},
+  {n:'PART 2', t:'Claude & Cowork',     id:'p1-cover'},
+  {n:'PART 3', t:'셋업 & 인터페이스',    id:'p2-cover'},
+  {n:'PART 4', t:'컨텍스트 엔지니어링',  id:'p5-cover'},
+  {n:'PART 5', t:'고급 기능',     id:'p7-cover'},
+  {n:'PART 6', t:'커넥터',              id:'p3-cover'},
+  {n:'PART 7', t:'스킬 (Skills)',       id:'p4-cover'},
+  {n:'PART 8', t:'컴퓨터 기초 용어',     id:'cc-cover',  sec:'Claude Code 준비'},
+  {n:'PART 9',t:'웹 개발 기초',         id:'web-cover'},
+  {n:'PART 10',t:'Git & GitHub',        id:'git-cover'},
+  {n:'PART 11',t:'실전 프로젝트',        id:'cap-cover', sec:'캡스톤 실습'},
+  {n:'A1', t:'좋은 프롬프트',        id:'apx-goodprompt', sec:'APPENDIX'},
+  {n:'A2', t:'전역 지침',            id:'apx-global'},
+  {n:'A3', t:'프로젝트 지침',        id:'apx-project'},
+  {n:'A4', t:'챗봇 구현 프롬프트',   id:'apx-prompt'},
+  {n:'A5', t:'참고 링크',            id:'apx-links'},
+];
+const sbList=document.getElementById('sb-list');
+let sbItems=[];
+PARTS.forEach(p=>{
+  const idx=slides.findIndex(s=>s.id===p.id); if(idx<0)return;
+  if(p.sec){const h=document.createElement('div');h.className='sb-sec';h.textContent=p.sec;sbList.appendChild(h);}
+  const el=document.createElement('div');el.className='sb-item';el.dataset.idx=idx;
+  el.innerHTML='<span class="sb-num">'+p.n+'</span><span class="sb-title">'+p.t+'</span>';
+  el.onclick=()=>{go(idx);if(window.innerWidth<=760)closeSidebar();};
+  sbList.appendChild(el);sbItems.push(el);
+});
+function updateSidebar(){
+  let act=sbItems[0];
+  sbItems.forEach(el=>{if(+el.dataset.idx<=cur)act=el;});
+  sbItems.forEach(el=>el.classList.toggle('active',el===act));
+}
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
+function toggleSidebar(){document.getElementById('sidebar').classList.contains('open')?closeSidebar():openSidebar();}
+document.addEventListener('keydown',e=>{
+  if(e.target===pin)return;
+  if(e.key==='Escape')closeSidebar();
+  if(e.key==='m'||e.key==='M'||e.key==='ㅡ')toggleSidebar();
+});
+window.__sbReady=true;
+updateSidebar();
+</script>
+</body>
+</html>
